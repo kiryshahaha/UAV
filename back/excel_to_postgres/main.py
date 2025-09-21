@@ -60,7 +60,8 @@ def main():
                 
                 # Очищаем DataFrame
                 df_cleaned = data_processor.clean_dataframe(df)
-                combined_df_list.append(df_cleaned)
+                df_decoded = data_processor.decode_flight_plan_fields(df_cleaned)
+                combined_df_list.append(df_decoded)
             
             # Объединяем все DataFrame
             if combined_df_list:
@@ -91,6 +92,7 @@ def main():
                 
                 # Очищаем DataFrame
                 df_cleaned = data_processor.clean_dataframe(df)
+                df_decoded = data_processor.decode_flight_plan_fields(df_cleaned)
                 
                 # Проверяем, есть ли данные после очистки
                 if df_cleaned.empty:
@@ -104,7 +106,7 @@ def main():
                 
                 try:
                     # Загружаем данные
-                    postgres_loader.load_data(df_cleaned, table_name, if_exists='replace')
+                    postgres_loader.load_data(df_decoded, table_name, if_exists='replace')
                     successful_loads += 1
                     total_rows += len(df_cleaned)
                     print(f"    ✓ Успешно загружено в таблицу '{table_name}': {len(df_cleaned)} строк")
