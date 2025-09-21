@@ -1,7 +1,6 @@
 import pandas as pd
 import os
 from dotenv import load_dotenv
-import logging
 
 load_dotenv()
 
@@ -31,7 +30,7 @@ class ExcelParser:
             raise Exception(f"Ошибка при чтении страницы '{sheet_name}': {e}")
     
     def read_all_excel_sheets(self):
-        """Чтение всех страниц Excel файла с ограничением первыми 10 строками для дебага"""
+        """Чтение всех страниц Excel файла"""
         try:
             # Используем pandas.read_excel с sheet_name=None для чтения всех страниц
             all_sheets = pd.read_excel(
@@ -39,9 +38,9 @@ class ExcelParser:
                 sheet_name=None  # Это вернет словарь {sheet_name: DataFrame}
             )
 
-            # Ограничиваем только первыми 10 строками для каждого листа
-            for sheet_name in all_sheets:
-                all_sheets[sheet_name] = all_sheets[sheet_name].head(10)
+            # # Ограничиваем только первыми 10 строками для каждого листа
+            # for sheet_name in all_sheets:
+            #     all_sheets[sheet_name] = all_sheets[sheet_name].head(10)
 
             return all_sheets
         except Exception as e:
