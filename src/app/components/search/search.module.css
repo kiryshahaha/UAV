@@ -24,3 +24,16 @@
     outline: none;
     box-shadow: none;
 }
+
+@media (max-width: 768px) {
+    .searchContainer {
+        padding: 8px 12px;
+        gap: 8px;
+        border-radius: 10px;
+    }
+    
+    .searchInput {
+        font-size: 16px; 
+    }
+    
+}

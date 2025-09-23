@@ -1,6 +1,12 @@
 .mapContainer {
-  height: 100%; /* или 100vh, если хочешь на весь экран */
+  height: 100%; 
   border-radius: 22px;
   overflow: hidden;
   background: #aad3df;
+}
+
+@media (max-width: 768px) {
+    .mapContainer {
+        border-radius: 16px;
+    }
 }
