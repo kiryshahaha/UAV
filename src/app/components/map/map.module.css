@@ -5,3 +5,9 @@
     box-sizing: border-box;
     border-radius: 22px;
 }
+
+@media (max-width: 768px) {
+    .mapContainer {
+        border-radius: 16px;
+    }
+}

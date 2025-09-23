@@ -10,3 +10,11 @@
     height: 100%; 
     box-sizing: border-box; 
 }
+
+@media (max-width: 768px) {
+    .leftSearchBarContainer {
+        padding: 8px;
+        border-radius: 16px;
+        height: 100%;
+    }
+}

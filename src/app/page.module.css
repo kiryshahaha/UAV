@@ -5,6 +5,7 @@
     position: relative;
     height: 100dvh; 
     box-sizing: border-box; 
+    flex-direction: row;
 }
 
 .LeftSearchBar{
@@ -13,4 +14,22 @@
 
 .Map{
     width: 85%;
+}
+
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column; /* Вертикальное расположение на мобильных */
+        padding: 5px;
+        gap: 5px;
+    }
+    
+    .LeftSearchBar {
+        width: 100%;
+        height: 60px; /* Фиксированная высота для поиска */
+    }
+    
+    .Map {
+        width: 100%;
+        height: calc(100dvh - 70px); /* Оставшаяся высота минус поиск и отступы */
+    }
 }
