@@ -1,3 +1,4 @@
+
 import os
 import pandas as pd
 from dotenv import load_dotenv
@@ -7,14 +8,35 @@ from parsers.data_processor import DataProcessor
 from loaders.postgres_loader import PostgresLoader
 
 def main():
-    """Основная функция для запуска парсинга и загрузки всех страниц Excel"""
+    """Основная функция с автоматическим выбором режима обработки"""
     
     # Загрузка переменных окружения
     load_dotenv()
     
+    # Проверяем, включены ли авиационные шаблоны
+    use_aviation_templates = os.getenv('USE_AVIATION_TEMPLATES', 'false').lower() == 'true'
+    
+    if use_aviation_templates:
+        print("Обнаружены настройки авиационных шаблонов - переключение на расширенную обработку...")
+        try:
+            from templates.template_integration import main_with_templates
+            main_with_templates()
+            return
+        except ImportError as e:
+            print(f"Ошибка импорта модуля шаблонов: {e}")
+            print("Переключение на стандартную обработку...")
+        except Exception as e:
+            print(f"Ошибка в обработке с шаблонами: {e}")
+            print("Переключение на стандартную обработку...")
+    
+    # Стандартная обработка
+    main_standard()
+
+def main_standard():
+    """Стандартная функция для парсинга и загрузки всех страниц Excel в PostgreSQL"""
+    
     # Параметры из .env
     base_table_name = os.getenv('TABLE_NAME', 'excel_data')
-    # Новый параметр - объединять ли все страницы в одну таблицу
     merge_sheets = os.getenv('MERGE_SHEETS', 'false').lower() == 'true'
     
     try:
@@ -24,7 +46,7 @@ def main():
         postgres_loader = PostgresLoader()
         
         print("=" * 60)
-        print("НАЧАЛО ПАРСИНГА ВСЕХ СТРАНИЦ EXCEL В POSTGRESQL")
+        print("СТАНДАРТНАЯ ОБРАБОТКА EXCEL В POSTGRESQL")
         print("=" * 60)
         
         # Получаем список всех страниц
@@ -100,7 +122,6 @@ def main():
                     continue
                 
                 # Генерируем имя таблицы
-                # Используем специальную функцию для очистки названий страниц
                 clean_sheet_name = data_processor.clean_sheet_name_for_table(sheet_name)
                 table_name = f"{base_table_name}_{clean_sheet_name}"
                 
@@ -109,10 +130,10 @@ def main():
                     postgres_loader.load_data(df_decoded, table_name, if_exists='replace')
                     successful_loads += 1
                     total_rows += len(df_cleaned)
-                    print(f"    ✓ Успешно загружено в таблицу '{table_name}': {len(df_cleaned)} строк")
+                    print(f"    Успешно загружено в таблицу '{table_name}': {len(df_cleaned)} строк")
                     
                 except Exception as e:
-                    print(f"    ✗ Ошибка загрузки страницы '{sheet_name}': {e}")
+                    print(f"    Ошибка загрузки страницы '{sheet_name}': {e}")
             
             # Общая статистика
             print(f"\n5. Общая статистика:")
@@ -137,10 +158,60 @@ def main():
         print("ПАРСИНГ И ЗАГРУЗКА ВСЕХ СТРАНИЦ УСПЕШНО ЗАВЕРШЕНЫ!")
         print("=" * 60)
         
+        # Показываем подсказку о возможности использования шаблонов
+        print("\nСОВЕТ:")
+        print("   Для обработки авиационных данных можно использовать специальные шаблоны.")
+        print("   Добавьте в .env файл: USE_AVIATION_TEMPLATES=true")
+        print("   Это позволит структурировать данные согласно авиационным стандартам.")
+        
     except Exception as e:
         print(f"\nОШИБКА: {e}")
         import traceback
         traceback.print_exc()
 
+
+def show_system_info():
+    """Показать информацию о системе и доступных возможностях"""
+    print("=" * 70)
+    print("СИСТЕМА ОБРАБОТКИ EXCEL ДАННЫХ")
+    print("=" * 70)
+    
+    print("\nДОСТУПНЫЕ РЕЖИМЫ ОБРАБОТКИ:")
+    print("   1. СТАНДАРТНЫЙ РЕЖИМ:")
+    print("      - Прямая загрузка данных из Excel в PostgreSQL")
+    print("      - Автоматическая очистка и нормализация названий колонок")
+    print("      - Создание отдельной таблицы для каждого листа")
+    print("")
+    print("   2. АВИАЦИОННЫЕ ШАБЛОНЫ:")
+    print("      - Структурирование данных согласно авиационным стандартам")
+    print("      - Автоматическое определение типа сообщения (FPL, DEP, ARR, и др.)")
+    print("      - Валидация данных по авиационным требованиям")
+    print("      - Генерация подробных отчетов о процессинге")
+    
+    print("\nНАСТРОЙКИ (.env файл):")
+    print("   DB_* - настройки подключения к PostgreSQL")
+    print("   EXCEL_FILE_PATH - путь к Excel файлу")
+    print("   TABLE_NAME - базовое имя таблиц")
+    print("   USE_AVIATION_TEMPLATES - включить авиационные шаблоны")
+    print("   AUTO_DETECT_MESSAGE_TYPE - автоопределение типа сообщения")
+    print("   GENERATE_REPORTS - генерация отчетов")
+    
+    print("\nЗАПУСК:")
+    print("   python main.py - автоматический выбор режима")
+    print("   python templates/template_integration.py - принудительно с шаблонами")
+    
+    # Проверяем текущие настройки
+    load_dotenv()
+    use_templates = os.getenv('USE_AVIATION_TEMPLATES', 'false').lower() == 'true'
+    print(f"\nТЕКУЩИЙ РЕЖИМ: {'Авиационные шаблоны' if use_templates else 'Стандартная обработка'}")
+    
+    print("=" * 70)
+
+
 if __name__ == "__main__":
-    main()
+    import sys
+    
+    if len(sys.argv) > 1 and sys.argv[1] == '--info':
+        show_system_info()
+    else:
+        main()
