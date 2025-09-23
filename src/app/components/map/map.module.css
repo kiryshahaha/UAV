@@ -1,0 +1,7 @@
+.mapContainer{
+    background-color: var(--fg-color);
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    border-radius: 22px;
+}

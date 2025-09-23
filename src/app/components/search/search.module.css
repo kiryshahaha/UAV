@@ -1,0 +1,26 @@
+.searchContainer{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 10px;
+    border-radius: 12px;
+    background-color: var(--bg-color);
+    width: 100%; 
+    box-sizing: border-box; 
+}
+
+.searchInput{
+    border: none;
+    background: none;
+    outline: none; 
+    width: 100%; 
+    font-size: 14px; 
+    color: inherit; 
+}
+
+/* Убираем подсветку при фокусе */
+.searchInput:focus {
+    outline: none;
+    box-shadow: none;
+}

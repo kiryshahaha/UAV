@@ -1,0 +1,16 @@
+.container{
+    display: flex;
+    padding: 10px;
+    gap: 10px;
+    position: relative;
+    height: 100dvh; 
+    box-sizing: border-box; 
+}
+
+.LeftSearchBar{
+    width: 25%;
+}
+
+.Map{
+    width: 85%;
+}
