@@ -38,9 +38,9 @@ class ExcelParser:
                 sheet_name=None  # Это вернет словарь {sheet_name: DataFrame}
             )
 
-            # Ограничиваем только первыми 10 строками для каждого листа
-            for sheet_name in all_sheets:
-                all_sheets[sheet_name] = all_sheets[sheet_name].head(10)
+            # # Ограничиваем только первыми 10 строками для каждого листа
+            # for sheet_name in all_sheets:
+            #     all_sheets[sheet_name] = all_sheets[sheet_name].head(10)
 
             return all_sheets
         except Exception as e:
