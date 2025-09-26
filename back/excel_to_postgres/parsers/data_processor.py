@@ -155,17 +155,9 @@ class DataProcessor:
         Дешифрует сырые данные из полей сообщения о плане запуска.
         Ищет буквенные признаки в каждой ячейке строки и распределяет значения по столбцам.
         """
-<<<<<<< HEAD
-        # Настройка логирования
-        logging.basicConfig(level=logging.DEBUG)
-        logger = logging.getLogger(__name__)
-
-        # Список всех возможных буквенных признаков
-=======
         if df.empty:
             return df
 
->>>>>>> b2a50bf (decoder v0.3)
         prefixes = [
             'DOF/', 'STS/', 'DEP/', 'DEST/', 'TYP/', 'REG/',
             'EET/', 'OPR/', 'ORGN/', 'PER/', 'DLE/'
@@ -174,31 +166,16 @@ class DataProcessor:
         # Создаем новые столбцы для каждого признака
         for prefix in prefixes:
             df[prefix.strip('/')] = ''
-<<<<<<< HEAD
-        df['RMK'] = ''  # Для RMK/ берем всё после признака
-        df['departure_time'] = None  # Время вылета
-        df['arrival_time'] = None    # Время прибытия
-=======
             df['RMK'] = ''
             df['departure_time'] = None
             df['arrival_time'] = None
             df['flight_level'] = ''  # Высота полета
             df['flight_zone'] = ''   # Зона полета
             df['flight_zone_radius'] = ''  # Радиус зоны полета
->>>>>>> b2a50bf (decoder v0.3)
 
         # Регулярные выражения для времени
         time_pattern_icao = r'(?<![/])([A-Z]{4})(\d{4})\b'  # UUDC0600
         time_pattern_hms = r'(\d{2}:\d{2}(?::\d{2})?)'  # 09:14 или 09:14:00
-<<<<<<< HEAD
-
-        # Проходим по каждой строке
-        for idx, row in df.iterrows():
-            departure_time = None
-            arrival_time = None
-
-            # Проходим по каждой ячейке в строке
-=======
         shr_pattern = r'\(SHR-(.*?)\)'
         flight_level_pattern = r'M\d{4}/M\d{4}'  # M0000/M0080
         flight_zone_pattern = r'\/ZONA\s+([^\/]+)'  # /ZONA R0,5 4408N04308E
@@ -265,71 +242,9 @@ class DataProcessor:
             idep_found = False
             iarr_found = False
 
->>>>>>> b2a50bf (decoder v0.3)
             for col in df.columns:
                 cell = str(row[col])
 
-<<<<<<< HEAD
-                # Ищем все признаки в ячейке
-                for prefix in prefixes:
-                    if prefix in cell:
-                        # Извлекаем значение после признака
-                        value = cell.split(prefix)[1].split(' ')[0].split(')')[0].split('/')[0]
-                        df.at[idx, prefix.strip('/')] = value
-
-                # Обработка RMK/ (берем всё после признака)
-                if 'RMK/' in cell:
-                    rmk_value = cell.split('RMK/')[1].split(')')[0].strip()
-                    df.at[idx, 'RMK'] = rmk_value
-
-                # Поиск времени в текущей ячейке
-                times = []
-                # Ищем все вхождения времени в формате 09:14 или 09:14:00
-                for match in re.finditer(time_pattern_hms, cell):
-                    times.append(match.group(1))
-                # Ищем все вхождения времени в формате UUDC0600
-                for match in re.finditer(time_pattern_icao, cell):
-                    time_str = match.group(2)
-                    times.append(f"{time_str[:2]}:{time_str[2:]}")
-
-                # Если нашли времена в текущей ячейке
-                if times:
-                    if len(times) == 1:
-                        # Если время одно, это время отправления
-                        departure_time = times[0]
-                    elif len(times) >= 2:
-                        # Если времен два или больше, первое — отправление, второе — прибытие
-                        departure_time = times[0]
-                        arrival_time = times[1]
-
-            # Если время прибытия не найдено, ищем его в других ячейках строки
-            if departure_time and not arrival_time:
-                logger.debug(f"Поиск времени прибытия в других ячейках строки {idx}...")
-                for col in df.columns:
-                    cell = str(row[col])
-                    # Ищем время в формате UUDC0600 или 09:14:00, но не равное времени отправления
-                    for match in re.finditer(time_pattern_hms, cell):
-                        current_time = match.group(1)
-                        if current_time != departure_time:
-                            logger.debug(f"Найдено время: {current_time} в ячейке {col}")
-                            arrival_time = current_time
-                            break
-                    if arrival_time:
-                        break
-                    for match in re.finditer(time_pattern_icao, cell):
-                        time_str = match.group(2)
-                        current_time = f"{time_str[:2]}:{time_str[2:]}"
-                        if current_time != departure_time:
-                            logger.debug(f"Найдено время: {current_time} в ячейке {col}")
-                            arrival_time = current_time
-                            break
-                    if arrival_time:
-                        break
-
-            # Проверка и обмен времен отправления и прибытия, если время прибытия раньше времени отправления
-            if departure_time and arrival_time:
-                # Добавляем :00, если времени в формате чч:мм
-=======
                 if not idep_found and (col == 'IDEP' or (isinstance(col, int) and 'IDEP' in str(col)) or 'IDEP' in cell):
                     idep_found = True
                     atd_match = re.search(r'-ATD\s+(\d{4})', cell)
@@ -427,7 +342,6 @@ class DataProcessor:
             if departure_time:
                 if departure_time == '24:00' or departure_time == '24:00:00':
                     departure_time = '00:00:00'
->>>>>>> b2a50bf (decoder v0.3)
                 if len(departure_time.split(':')) == 2:
                     departure_time += ':00'
 
@@ -442,29 +356,13 @@ class DataProcessor:
                     departure_dt = datetime.strptime(departure_time, "%H:%M:%S")
                     arrival_dt = datetime.strptime(arrival_time, "%H:%M:%S")
 
-<<<<<<< HEAD
-                if arrival_dt < departure_dt:
-                    departure_time, arrival_time = arrival_time, departure_time
-=======
                     if arrival_dt < departure_dt:
                         df.at[idx, 'departure_time'], df.at[idx, 'arrival_time'] = arrival_time, departure_time
                 except ValueError:
                     pass
->>>>>>> b2a50bf (decoder v0.3)
 
             # Записываем найденные времена
             df.at[idx, 'departure_time'] = departure_time
             df.at[idx, 'arrival_time'] = arrival_time
 
-<<<<<<< HEAD
-            # # Логируем, если время не распознано
-            # if not departure_time:
-            #     logger.warning(f"Время отправления не распознано в строке {idx}.")
-            # if not arrival_time:
-            #     logger.warning(f"Время прибытия не распознано в строке {idx}.")
-            # else:
-            #     logger.debug(f"Время прибытия в строке {idx}: {arrival_time}")
-
-=======
->>>>>>> b2a50bf (decoder v0.3)
         return df
