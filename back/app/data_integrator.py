@@ -5,19 +5,21 @@ from sqlalchemy.orm import sessionmaker
 from datetime import datetime
 import pandas as pd
 
-# Добавляем путь к вашей системе парсинга
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'excel_to_postgres'))
-
-try:
-    from config.database import DatabaseConfig
-except ImportError:
-    # Fallback конфиг если основной не доступен
-    class DatabaseConfig:
-        def get_connection_string(self):
-            return "postgresql://postgres:postgres@localhost:5432/postgres"
+# Локальный fallback конфиг
+class DatabaseConfig:
+    def get_connection_string(self):
+        """Получить строку подключения из переменных окружения"""
+        DB_HOST = os.getenv('DB_HOST', 'localhost')
+        DB_PORT = os.getenv('DB_PORT', '5432')
+        DB_NAME = os.getenv('DB_NAME', 'postgres')
+        DB_USER = os.getenv('DB_USER', 'postgres')
+        DB_PASSWORD = os.getenv('DB_PASSWORD', 'postgres')
+        
+        return f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
 class DataIntegrator:
     def __init__(self):
+        # ✅ Используем локальный конфиг вместо импорта
         self.db_config = DatabaseConfig()
         self.engine = create_engine(self.db_config.get_connection_string())
         self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
@@ -25,7 +27,6 @@ class DataIntegrator:
     def get_available_tables(self):
         """Получить список доступных таблиц с данными БВС"""
         with self.engine.connect() as conn:
-            # Ищем таблицы, созданные системой парсинга
             result = conn.execute(text("""
                 SELECT table_name 
                 FROM information_schema.tables 
@@ -49,53 +50,52 @@ class DataIntegrator:
             columns = [row[0] for row in columns_result]
             print(f"Колонки в таблице {source_table}: {columns}")
             
-            # Создаем таблицу flights если не существует
-            conn.execute(text("""
-                CREATE TABLE IF NOT EXISTS flights (
-                    id SERIAL PRIMARY KEY,
-                    message_type VARCHAR(10) DEFAULT 'FPL',
-                    aircraft_id VARCHAR(50),
-                    aircraft_type VARCHAR(50),
-                    departure_aerodrome VARCHAR(10),
-                    destination_aerodrome VARCHAR(10),
-                    departure_time VARCHAR(10),
-                    route TEXT,
-                    region VARCHAR(50),
-                    source_table VARCHAR(100),
-                    created_at TIMESTAMP DEFAULT NOW()
-                )
-            """))
+            # ✅ УБИРАЕМ создание таблицы - она уже создана FastAPI
+            # Просто проверяем что колонка source_table существует
+            try:
+                conn.execute(text("ALTER TABLE flights ADD COLUMN IF NOT EXISTS source_table VARCHAR(100)"))
+                conn.commit()
+            except:
+                pass  # Колонка уже существует
             
-            # Маппинг колонок (можете настроить под свои данные)
+            # Маппинг колонок (улучшенный)
             column_mapping = {
-                'aircraft_id': self._find_column(columns, ['reis', 'flight', 'aircraft_id', 'callsign', 'id']),
-                'aircraft_type': self._find_column(columns, ['tip_vs', 'aircraft_type', 'type', 'model']),
-                'departure_aerodrome': self._find_column(columns, ['mesto_vyleta', 'departure', 'from', 'dep', 'aerodrom_vylet']),
-                'destination_aerodrome': self._find_column(columns, ['mesto_posadki', 'destination', 'to', 'arr', 'aerodrom_posadka']),
-                'departure_time': self._find_column(columns, ['vremya_vyleta', 'departure_time', 't_vyl', 'time']),
-                'route': self._find_column(columns, ['marshrut', 'route', 'path', 'track'])
+                'aircraft_id': self._find_column(columns, ['reis', 'flight', 'aircraft_id', 'callsign', 'id', 'bort']),
+                'aircraft_type': self._find_column(columns, ['tip_vs', 'aircraft_type', 'type', 'model', 'tip_gruppa_vs']),
+                'departure_aerodrome': self._find_column(columns, ['mesto_vyleta', 'departure', 'from', 'dep', 'aerodrom_vyleta', 'a_v', 'arv']),
+                'destination_aerodrome': self._find_column(columns, ['mesto_posadki', 'destination', 'to', 'arr', 'aerodrom_posadki', 'a_p', 'arp']),
+                'departure_time': self._find_column(columns, ['vremya_vyleta', 'departure_time', 't_vyl', 'time', 'data_vremya_vyleta', 't_vyl_fakt']),
+                'route': self._find_column(columns, ['marshrut', 'route', 'path', 'track', 'tekst_ishodnogo_marshruta', 'raion_poletov'])
             }
             
-            # Строим SELECT запрос
+            # Строим SELECT запрос - ✅ ИСПРАВЛЯЕМ порядок колонок
             select_fields = []
-            for api_field, source_field in column_mapping.items():
+            
+            # Сначала фиксированные поля в правильном порядке
+            select_fields.append("'FPL' as message_type")
+            
+            # Затем маппинг полей
+            for api_field in ['aircraft_id', 'aircraft_type', 'departure_aerodrome', 
+                            'destination_aerodrome', 'departure_time', 'route']:
+                source_field = column_mapping.get(api_field)
                 if source_field:
                     select_fields.append(f'"{source_field}" as {api_field}')
                 else:
                     select_fields.append(f"NULL as {api_field}")
             
-            # Добавляем фиксированные поля
+            # Регион и source_table в конце
             select_fields.extend([
-                "'FPL' as message_type",
                 f"'{region}' as region",
                 f"'{source_table}' as source_table"
             ])
             
-            # Выполняем миграцию
+            # Выполняем миграцию - ✅ ИСПРАВЛЯЕМ порядок в INSERT
             migrate_query = f"""
-                INSERT INTO flights (message_type, aircraft_id, aircraft_type, 
-                                   departure_aerodrome, destination_aerodrome, 
-                                   departure_time, route, region, source_table)
+                INSERT INTO flights (
+                    message_type, aircraft_id, aircraft_type, 
+                    departure_aerodrome, destination_aerodrome, 
+                    departure_time, route, region, source_table
+                )
                 SELECT {', '.join(select_fields)}
                 FROM "{source_table}"
                 WHERE NOT EXISTS (
@@ -103,11 +103,15 @@ class DataIntegrator:
                 )
             """
             
-            result = conn.execute(text(migrate_query))
-            conn.commit()
-            
-            print(f"Перенесено {result.rowcount} записей из {source_table}")
-            return result.rowcount
+            try:
+                result = conn.execute(text(migrate_query))
+                conn.commit()
+                print(f"✅ Перенесено {result.rowcount} записей из {source_table}")
+                return result.rowcount
+            except Exception as e:
+                print(f"❌ Ошибка миграции {source_table}: {e}")
+                conn.rollback()
+                return 0
     
     def _find_column(self, columns, possible_names):
         """Найти колонку по возможным названиям"""
@@ -128,13 +132,30 @@ class DataIntegrator:
             print("❌ Не найдено таблиц для миграции")
             return 0
         
-        for table in tables:
+        # Сначала обрабатываем таблицы с aviation (они структурированы)
+        aviation_tables = [t for t in tables if 'fpl_aviation' in t]
+        other_tables = [t for t in tables if 'fpl_aviation' not in t]
+        
+        print(f"🔍 Найдено aviation таблиц: {len(aviation_tables)}")
+        print(f"🔍 Найдено обычных таблиц: {len(other_tables)}")
+        
+        # Сначала aviation таблицы
+        for table in aviation_tables:
             try:
-                # Определяем регион по имени таблицы
                 region = self._extract_region_from_table_name(table)
+                print(f"🔄 Обработка aviation таблицы: {table} -> регион: {region}")
                 migrated = self.migrate_data_to_api_table(table, region)
                 total_migrated += migrated
-                print(f"✅ {table} -> {migrated} записей")
+            except Exception as e:
+                print(f"❌ Ошибка с таблицей {table}: {e}")
+        
+        # Затем остальные таблицы
+        for table in other_tables:
+            try:
+                region = self._extract_region_from_table_name(table)
+                print(f"🔄 Обработка таблицы: {table} -> регион: {region}")
+                migrated = self.migrate_data_to_api_table(table, region)
+                total_migrated += migrated
             except Exception as e:
                 print(f"❌ Ошибка с таблицей {table}: {e}")
         
