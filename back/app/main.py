@@ -1,20 +1,35 @@
-from fastapi import FastAPI, HTTPException, Depends, Query, BackgroundTasks
+from fastapi import FastAPI, HTTPException, Depends, Query, BackgroundTasks, Path
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import func, text
+from sqlalchemy import func, text, distinct
 from sqlalchemy.orm import Session
-from typing import Optional, List
-from datetime import datetime, date, timedelta
+from typing import Optional, List, Dict, Any
+from datetime import datetime
 import os
 import sys
-import asyncio
+import logging
+from pydantic import BaseModel
+import json
+# Настройка логирования
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 # Добавляем текущую директорию в путь для импортов
 sys.path.append(os.path.dirname(__file__))
 
 # Импортируем из наших модулей
-from models import Flight, FlightResponse, AnalyticsResponse, RegionStats, Base
 from database import engine, SessionLocal, get_db
 from dependencies import get_cache_key, get_cached_data, set_cached_data
+
+# Константа с именем целевой таблицы
+TARGET_TABLE = "excel_data_result_1"
+
+# Модели для валидации данных
+class RegionCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
 
 # Создание приложения
 app = FastAPI(title="БВС API", version="1.0.0")
@@ -27,264 +42,291 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Флаг для отслеживания статуса миграции
-migration_status = {"running": False, "completed": False, "error": None}
-
-async def run_auto_migration():
-    """Асинхронная автоматическая миграция"""
+def _find_column_case_insensitive(db: Session, table_name: str, target_columns: List[str]) -> Optional[str]:
+    """Находит имя колонки в таблице с учётом регистра."""
     try:
-        migration_status["running"] = True
-        print("🔄 Запуск автоматической миграции в фоне...")
-        
-        from data_integrator import DataIntegrator
-        integrator = DataIntegrator()
-        migrated_count = integrator.migrate_all_tables()
-        
-        migration_status["completed"] = True
-        migration_status["running"] = False
-        print(f"✅ Автоматическая миграция завершена. Перенесено: {migrated_count} записей")
-        
+        result = db.execute(text("""
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_name = :table_name
+            AND table_schema = 'public'
+        """), {"table_name": table_name})
+
+        existing_columns = [row[0] for row in result.fetchall()]
+        target_columns_lower = [col.lower() for col in target_columns]
+
+        for existing_col in existing_columns:
+            if existing_col.lower() in target_columns_lower:
+                return existing_col
+        return None
     except Exception as e:
-        migration_status["error"] = str(e)
-        migration_status["running"] = False
-        print(f"❌ Ошибка автоматической миграции: {e}")
+        logger.error(f"Ошибка при поиске колонки: {e}")
+        return None
+
+def _execute_safe_query(db: Session, query: str, params: Optional[Dict] = None) -> Any:
+    """Безопасно выполняет SQL-запрос с логированием ошибок."""
+    try:
+        logger.debug(f"Выполняется запрос: {query}")
+        result = db.execute(text(query), params or {})
+        return result
+    except Exception as e:
+        logger.error(f"Ошибка при выполнении запроса '{query}': {e}")
+        raise HTTPException(status_code=500, detail=f"Ошибка базы данных: {str(e)}")
+
+def _get_required_columns(db: Session) -> Dict[str, str]:
+    """Возвращает словарь с именами требуемых колонок."""
+    columns_mapping = {
+        "reg": ["reg", "REG", "registration", "регистрация"],
+        "opr": ["opr", "OPR", "operator", "оператор"],
+        "typ": ["typ", "TYP", "type", "тип"],
+        "dep": ["dep", "DEP", "departure", "вылет"],
+        "dest": ["dest", "DEST", "destination", "назначение"],
+        "flight_zone_radius": ["flight_zone_radius", "FLIGHT_ZONE_RADIUS", "radius", "радиус"],
+        "flight_level": ["flight_level", "FLIGHT_LEVEL", "level", "уровень"],
+        "departure_time": ["departure_time", "DEPARTURE_TIME", "departure", "время_вылета"],
+        "arrival_time": ["arrival_time", "ARRIVAL_TIME", "arrival", "время_прибытия"]
+    }
+
+    result = {}
+    for key, variants in columns_mapping.items():
+        column = _find_column_case_insensitive(db, TARGET_TABLE, variants)
+        if column:
+            result[key] = column
+
+    return result
 
 @app.on_event("startup")
 async def startup_event():
     """Запускается при старте FastAPI"""
-    Base.metadata.create_all(bind=engine)
-
-    from migrations import upgrade_database
-    upgrade_database()
-    print("🚀 Запуск БВС API...")
-    
-    # Быстрая проверка данных без блокировки
+    logger.info("🚀 Запуск БВС API...")
     db = SessionLocal()
     try:
-        flight_count = db.query(Flight).count()
-        print(f"📊 Найдено записей в таблице flights: {flight_count}")
-        
-        if flight_count == 0:
-            # Проверяем наличие таблиц парсера
-            result = db.execute(text("""
-                SELECT table_name FROM information_schema.tables 
-                WHERE table_schema = 'public' AND table_name LIKE '%excel_data%'
-            """))
-            parser_tables = [row[0] for row in result]
-            
-            if parser_tables:
-                print(f"📋 Найдены таблицы парсера: {len(parser_tables)}")
-                # Запускаем миграцию в фоне без блокировки старта сервера
-                asyncio.create_task(run_auto_migration())
-            else:
-                print("💡 Таблицы парсера не найдены. Используйте /api/admin/parse-excel")
+        table_exists = db.execute(text("""
+            SELECT EXISTS (
+                SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public'
+                AND table_name = :table_name
+            )
+        """), {"table_name": TARGET_TABLE}).scalar()
+
+        if table_exists:
+            record_count = db.execute(text(f"SELECT COUNT(*) FROM {TARGET_TABLE}")).scalar()
+            logger.info(f"✅ Таблица {TARGET_TABLE} найдена. Записей: {record_count}")
+
+            columns_result = db.execute(text("""
+                SELECT column_name, data_type
+                FROM information_schema.columns
+                WHERE table_name = :table_name
+                ORDER BY ordinal_position
+            """), {"table_name": TARGET_TABLE})
+
+            columns = [f"{row[0]} ({row[1]})" for row in columns_result]
+            logger.info(f"📊 Структура таблицы: {columns}")
         else:
-            print("✅ Данные готовы к использованию")
-            
+            logger.warning(f"⚠️ Таблица {TARGET_TABLE} не найдена. Используйте /api/admin/parse-excel для создания")
     except Exception as e:
-        print(f"⚠️ Ошибка при запуске: {e}")
+        logger.error(f"⚠️ Ошибка при запуске: {e}")
     finally:
         db.close()
 
-@app.get("/migration-status")
-async def get_migration_status():
-    """Статус автоматической миграции"""
-    return migration_status
-
-# Базовые эндпоинты
 @app.get("/")
-async def root():
-    return {
-        "message": "БВС API работает", 
-        "version": "1.0.0",
-        "migration_status": migration_status
-    }
+async def get_main_data(db: Session = Depends(get_db)):
+    """Главная страница - возвращает все строки с основными полями"""
+    try:
+        # Получаем имена нужных колонок
+        columns = _get_required_columns(db)
+        if not all(columns.values()):
+            missing = [k for k, v in columns.items() if not v]
+            raise HTTPException(status_code=400, detail=f"Отсутствуют обязательные колонки: {missing}")
 
+        # Формируем запрос с нужными колонками
+        select_columns = [
+            f'"{columns["reg"]}" as reg',
+            f'"{columns["opr"]}" as opr',
+            f'"{columns["typ"]}" as typ',
+            f'"{columns["dep"]}" as dep',
+            f'"{columns["dest"]}" as dest',
+            f'"{columns["flight_zone_radius"]}" as flight_zone_radius',
+            f'"{columns["flight_level"]}" as flight_level',
+            f'"{columns["departure_time"]}" as departure_time',
+            f'"{columns["arrival_time"]}" as arrival_time'
+        ]
+
+        query = f"SELECT {', '.join(select_columns)} FROM {TARGET_TABLE}"
+        result = _execute_safe_query(db, query)
+
+        data = [dict(row) for row in result.mappings().all()]
+
+        return {
+            "data": data,
+            "count": len(data),
+            "columns": list(columns.keys())
+        }
+    except Exception as e:
+        logger.error(f"Ошибка на главной странице: {e}")
+        raise HTTPException(status_code=500, detail=f"Ошибка: {str(e)}")
+
+@app.get("/statistics")
+async def get_statistics(
+    limit: Optional[int] = Query(None, description="Лимит записей"),
+    offset: int = Query(0, description="Смещение"),
+    db: Session = Depends(get_db)
+):
+    """Возвращает все данные таблицы (для статистики)"""
+    try:
+        # Проверяем существование таблицы
+        table_exists = db.execute(text("""
+            SELECT EXISTS (
+                SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public'
+                AND table_name = :table_name
+            )
+        """), {"table_name": TARGET_TABLE}).scalar()
+
+        if not table_exists:
+            raise HTTPException(status_code=404, detail=f"Таблица {TARGET_TABLE} не найдена")
+
+        # Получаем общее количество записей
+        total_count_result = db.execute(text(f"SELECT COUNT(*) FROM {TARGET_TABLE}"))
+        total_count = total_count_result.scalar() or 0  # Гарантируем, что total_count не None
+
+        # Получаем данные
+        if limit is None:
+            result = db.execute(text(f"SELECT * FROM {TARGET_TABLE} OFFSET :offset"), {"offset": offset})
+        else:
+            result = db.execute(
+                text(f"SELECT * FROM {TARGET_TABLE} LIMIT :limit OFFSET :offset"),
+                {"limit": limit, "offset": offset}
+            )
+
+        columns = result.keys()
+        data = [dict(zip(columns, row)) for row in result.fetchall()]
+
+        # Исправляем проверку has_more
+        has_more = False
+        if limit is not None and total_count is not None:
+            has_more = (offset + limit) < total_count
+
+        return {
+            "data": data,
+            "pagination": {
+                "limit": limit,
+                "offset": offset,
+                "total": total_count,
+                "has_more": has_more
+            }
+        }
+    except Exception as e:
+        logger.error(f"Ошибка в /statistics: {e}")
+        raise HTTPException(status_code=500, detail=f"Ошибка: {str(e)}")
+    
+@app.get("/city/{city_name}")
+async def get_city_data(
+    city_name: str = Path(..., description="Название центра ЕС ОРВД (например, 'Красноярский')"),
+    db: Session = Depends(get_db)
+):
+    """Возвращает данные для конкретного центра ЕС ОРВД"""
+    try:
+        # Ищем колонку с центром ЕС ОРВД
+        center_column = _find_column_case_insensitive(db, TARGET_TABLE, [
+            "tsentr_es_orvd", "TSENTR_ES_ORVD", "центр", "center"
+        ])
+
+        if not center_column:
+            raise HTTPException(
+                status_code=400,
+                detail="Не найдена колонка с центром ЕС ОРВД (tsentr_es_orvd)"
+            )
+
+        # Формируем запрос с точным совпадением
+        query = f"""
+            SELECT * FROM {TARGET_TABLE}
+            WHERE "{center_column}" = :city_name
+        """
+
+        result = _execute_safe_query(db, query, {"city_name": city_name})
+
+        # Преобразуем результат в список словарей
+        columns = result.keys()
+        data = []
+        for row in result.fetchall():
+            row_dict = dict(zip(columns, row))
+            # Преобразуем datetime в строки, если есть такие поля
+            for key, value in row_dict.items():
+                if isinstance(value, datetime):
+                    row_dict[key] = value.isoformat()
+            data.append(row_dict)
+
+        return {
+            "center": city_name,
+            "data": data,
+            "count": len(data),
+            "column_used": center_column
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Ошибка в /city/{city_name}: {e}")
+        raise HTTPException(status_code=500, detail=f"Ошибка: {str(e)}")
+
+
+@app.post("/admin/regions")
+async def add_region(
+    region: RegionCreate,
+    db: Session = Depends(get_db)
+):
+    """Добавляет новый регион (админский эндпоинт)"""
+    try:
+        # Здесь должна быть логика добавления региона в базу
+        regions_table = "regions"  # Замените на вашу таблицу регионов
+
+        # Проверяем, существует ли таблица регионов
+        table_exists = db.execute(text("""
+            SELECT EXISTS (
+                SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public'
+                AND table_name = :table_name
+            )
+        """), {"table_name": regions_table}).scalar()
+
+        if not table_exists:
+            raise HTTPException(status_code=404, detail=f"Таблица {regions_table} не найдена")
+
+        # Вставляем новый регион
+        insert_query = f"""
+            INSERT INTO {regions_table} (name, description)
+            VALUES (:name, :description)
+            RETURNING id
+        """
+
+        result = db.execute(text(insert_query), {
+            "name": region.name,
+            "description": region.description
+        })
+
+        # Исправляем обработку результата
+        fetched = result.fetchone()
+        if fetched is None:
+            db.rollback()
+            raise HTTPException(status_code=500, detail="Не удалось получить ID нового региона")
+
+        new_region_id = fetched[0]
+        db.commit()
+
+        return {
+            "status": "success",
+            "region_id": new_region_id,
+            "region_name": region.name,
+            "message": "Регион успешно добавлен"
+        }
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Ошибка при добавлении региона: {e}")
+        raise HTTPException(status_code=500, detail=f"Ошибка: {str(e)}")
 @app.get("/health")
 async def health():
-    return {"status": "OK", "timestamp": datetime.now()}
-# Административные эндпоинты
-@app.post("/api/admin/parse-excel")
-async def parse_excel_file(background_tasks: BackgroundTasks):
-    """Запустить парсинг Excel файла в фоновом режиме"""
-    try:
-        sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'excel_to_postgres'))
-        from main import main_standard
-        
-        def run_parser():
-            try:
-                print("🔄 Запуск парсера Excel...")
-                main_standard()
-                print("✅ Парсинг завершен успешно")
-            except Exception as e:
-                print(f"❌ Ошибка парсинга: {e}")
-        
-        background_tasks.add_task(run_parser)
-        
-        return {
-            "status": "started", 
-            "message": "Парсинг Excel запущен в фоновом режиме",
-            "timestamp": datetime.utcnow().isoformat()
-        }
-        
-    except ImportError as e:
-        raise HTTPException(status_code=500, detail=f"Ошибка импорта парсера: {e}")
-
-@app.post("/api/admin/migrate-data")
-async def migrate_parser_data(background_tasks: BackgroundTasks):
-    """Мигрировать данные из таблиц парсера в таблицу flights"""
-    try:
-        from data_integrator import DataIntegrator
-        
-        def run_migration():
-            try:
-                print("🔄 Запуск миграции данных...")
-                integrator = DataIntegrator()
-                migrated_count = integrator.migrate_all_tables()
-                print(f"✅ Миграция завершена. Перенесено записей: {migrated_count}")
-            except Exception as e:
-                print(f"❌ Ошибка миграции: {e}")
-        
-        background_tasks.add_task(run_migration)
-        
-        return {
-            "status": "started",
-            "message": "Миграция данных запущена в фоновом режиме",
-            "timestamp": datetime.utcnow().isoformat()
-        }
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Ошибка миграции: {e}")
-
-@app.get("/api/admin/available-tables")
-async def get_available_tables(db: Session = Depends(get_db)):
-    """Получить список всех таблиц в БД"""
-    try:
-        result = db.execute(text("""
-            SELECT table_name 
-            FROM information_schema.tables 
-            WHERE table_schema = 'public' 
-            AND table_type = 'BASE TABLE'
-            ORDER BY table_name
-        """))
-        tables = [row[0] for row in result]
-        return {"tables": tables}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Ошибка получения таблиц: {e}")
-
-# Основные эндпоинты данных
-@app.get("/api/analytics/dashboard")
-async def get_dashboard_analytics(
-    period: str = Query("30d", description="Период: 7d, 30d, 90d, 1y, all"),
-    db: Session = Depends(get_db)
-):
-    """Основная аналитика для дашборда"""
-    cache_key = get_cache_key("dashboard", period=period)
-    cached = get_cached_data(cache_key)
-    if cached:
-        return cached
-    
-    # Проверяем наличие данных
-    total_flights_count = db.query(Flight).count()
-    
-    if total_flights_count == 0:
-        return {
-            "status": "no_data",
-            "message": "В базе данных нет записей о полетах",
-            "suggestion": "Запустите парсинг Excel и миграцию данных через /api/admin/parse-excel и /api/admin/migrate-data",
-            "total_flights": 0,
-            "total_regions": 0,
-            "total_drones": 0,
-            "period": period,
-            "last_updated": datetime.utcnow().isoformat(),
-            "top_regions": []
-        }
-    
-    # Рассчитываем дату начала периода
-    today = datetime.utcnow().date()
-    if period == "7d":
-        start_date = today - timedelta(days=7)
-    elif period == "30d":
-        start_date = today - timedelta(days=30)
-    elif period == "90d":
-        start_date = today - timedelta(days=90)
-    elif period == "1y":
-        start_date = today - timedelta(days=365)
-    else:
-        start_date = date(2000, 1, 1)  # все данные
-    
-    # Общая статистика
-    total_flights = db.query(Flight).filter(Flight.created_at >= start_date).count()
-    total_regions = db.query(Flight.region).filter(Flight.created_at >= start_date).distinct().count()
-    total_drones = db.query(Flight.aircraft_id).filter(Flight.created_at >= start_date).distinct().count()
-    
-    # Топ регионов по количеству полетов
-    top_regions_query = db.query(
-        Flight.region,
-        func.count(Flight.id).label('flights_count'),
-        func.count(func.distinct(Flight.aircraft_id)).label('drones_count')
-    ).filter(Flight.created_at >= start_date).group_by(Flight.region).order_by(func.count(Flight.id).desc()).limit(10)
-    
-    top_regions = [
-        {"region": r.region, "flights_count": r.flights_count, "drones_count": r.drones_count}
-        for r in top_regions_query.all()
-    ]
-    
-    response = {
-        "status": "success",
-        "total_flights": total_flights,
-        "total_regions": total_regions,
-        "total_drones": total_drones,
-        "period": period,
-        "last_updated": datetime.utcnow().isoformat(),
-        "top_regions": top_regions
-    }
-    
-    set_cached_data(cache_key, response)
-    return response
-
-# Остальные эндпоинты (добавьте их аналогично)
-@app.get("/flights/")
-async def get_flights(
-    region: Optional[str] = Query(None),
-    aircraft_type: Optional[str] = Query(None),
-    limit: int = Query(default=100, le=1000),
-    db: Session = Depends(get_db)
-):
-    # SQL запрос который точно вернет все существующие колонки
-    base_query = "SELECT * FROM flights WHERE 1=1"
-    params = {}
-    
-    if region:
-        base_query += " AND region = :region"
-        params['region'] = region
-    if aircraft_type:
-        base_query += " AND aircraft_type = :aircraft_type"
-        params['aircraft_type'] = aircraft_type
-        
-    base_query += f" LIMIT {limit}"
-    
-    result = db.execute(text(base_query), params)
-    columns = result.keys()
-    flights = result.fetchall()
-    
-    # Динамически создаем dict на основе реальных колонок
-    return [dict(zip(columns, flight)) for flight in flights]
-
-
-@app.get("/statistics/overview")
-async def get_statistics(db: Session = Depends(get_db)):
-    total_flights = db.query(Flight).count()
-    total_regions = db.query(Flight.region).distinct().count()
-    top_regions = db.query(Flight.region, func.count(Flight.id).label('count')).group_by(Flight.region).order_by(func.count(Flight.id).desc()).limit(5).all()
-    top_aircraft = db.query(Flight.aircraft_type, func.count(Flight.id).label('count')).filter(Flight.aircraft_type.isnot(None)).group_by(Flight.aircraft_type).order_by(func.count(Flight.id).desc()).limit(5).all()
-    
-    return {
-        "total_flights": total_flights,
-        "total_regions": total_regions,
-        "top_regions": [{"region": r.region, "count": r.count} for r in top_regions],
-        "top_aircraft_types": [{"aircraft_type": r.aircraft_type, "count": r.count} for r in top_aircraft]
-    }
+    return {"status": "OK", "timestamp": datetime.now().isoformat()}
 
 if __name__ == "__main__":
     import uvicorn

@@ -1,50 +1,46 @@
 import redis
 import json
 from datetime import timedelta
-from typing import Any
-from datetime import datetime, date
+from functools import lru_cache
+import os
 
-# Redis кэш
-redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
 
-# Функции кэширования
-def get_cache_key(endpoint: str, **kwargs) -> str:
+# Настройка Redis
+redis_client = redis.Redis(
+    host=os.getenv('REDIS_HOST', 'localhost'),
+    port=int(os.getenv('REDIS_PORT', 6379)),
+    db=int(os.getenv('REDIS_DB', 0)),
+    decode_responses=True
+)
+
+def get_cache_key(endpoint: str, **params):
     """Генерация ключа кэша"""
-    params = "_".join(f"{k}_{v}" for k, v in sorted(kwargs.items()))
-    return f"api_{endpoint}_{params}"
+    key_parts = [endpoint]
+    for k, v in sorted(params.items()):
+        key_parts.append(f"{k}:{v}")
+    return "|".join(key_parts)
 
-def get_cached_data(key: str) -> Any:
+def get_cached_data(key: str):
     """Получить данные из кэша"""
     try:
         cached = redis_client.get(key)
-        if cached is not None:
-            if isinstance(cached, (str, bytes, bytearray)):
-                return json.loads(cached)
-            else:
-                return cached
+        if cached:
+            # Явно приводим к строке
+            return json.loads(str(cached))
         return None
-    except (json.JSONDecodeError, TypeError) as e:
-        print(f"Error decoding cached data for key {key}: {e}")
+    except Exception:
         return None
 
-def set_cached_data(key: str, data: Any, expire_minutes: int = 5):
-    """Сохранить данные в кэш с обработкой datetime"""
-    
-    def serialize_obj(obj):
-        if isinstance(obj, (datetime, date)):
-            return obj.isoformat()
-        if isinstance(obj, list):
-            return [serialize_obj(item) for item in obj]
-        if isinstance(obj, dict):
-            return {k: serialize_obj(v) for k, v in obj.items()}
-        return obj
-
+def set_cached_data(key: str, data: dict, expire_minutes: int = 30):
+    """Сохранить данные в кэш"""
     try:
-        serialized_data = serialize_obj(data)
-        redis_client.setex(
-            key, 
-            timedelta(minutes=expire_minutes), 
-            json.dumps(serialized_data, ensure_ascii=False)
-        )
+        # Сериализуем данные, обрабатывая datetime объекты
+        def json_serializer(obj):
+            if hasattr(obj, 'isoformat'):
+                return obj.isoformat()
+            raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
+        
+        serialized_data = json.dumps(data, default=json_serializer, ensure_ascii=False)
+        redis_client.setex(key, timedelta(minutes=expire_minutes), serialized_data)
     except Exception as e:
-        print(f"Error caching data for key {key}: {e}")
+        print(f"Ошибка кэширования: {e}")
