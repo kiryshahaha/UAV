@@ -40,7 +40,7 @@ export default function Map() {
     });
 
     mapRef.current = map;
-    map.locate({ setView: true, maxZoom: 6 });
+    // map.locate({ setView: true, maxZoom: 6 });
 
     // Слой OSM
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
