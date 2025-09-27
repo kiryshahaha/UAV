@@ -11,46 +11,78 @@ export default function Map() {
 
     const L = require("leaflet");
 
-    const southWest = L.latLng(-90, -160);
-    const northEast = L.latLng(90, 360);
-    const largeBounds = L.latLngBounds(southWest, northEast);
+    // Константы
+    const CENTER = [55.7522, 37.6156]; // Москва
+    const ZOOM = 5;
+    const MIN_ZOOM = 2;
+    const MAX_ZOOM = 15;
 
+    const REGION_STYLE = {
+      color: "#ffffff",
+      fillColor: "#22222204",
+      weight: 2,
+      fillOpacity: 0.3,
+    };
+
+    const REGION_HOVER_STYLE = { fillColor: "yellow" };
+
+    // Создаем карту
     const map = L.map("map", {
-      center: [55.7522, 37.6156], // центр Москва
-      zoom: 4,
-      minZoom: 3,
-      maxZoom: 15,
+      center: CENTER,
+      zoom: ZOOM,
+      minZoom: MIN_ZOOM,
+      maxZoom: MAX_ZOOM,
       attributionControl: false,
-      preferCanvas: true,
-      maxBounds: largeBounds,
+      maxBounds: L.latLngBounds(L.latLng(-90, -180), L.latLng(90, 180)),
       maxBoundsViscosity: 0.9,
+      worldCopyJump: false,
     });
 
     mapRef.current = map;
+    map.locate({ setView: true, maxZoom: 6 });
 
+    // Слой OSM
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "&copy; OpenStreetMap contributors",
+      keepBuffer: 10,
+      reuseTiles: true,
+      updateWhenIdle: false,
     }).addTo(map);
 
+    // Функции для событий
+    const onEachRegion = (feature, layer) => {
+      if (feature.properties?.NAME_1) {
+        layer.bindPopup(`Регион: ${feature.properties.NAME_1}`);
+      }
+
+      layer.on("mouseover", () => layer.setStyle(REGION_HOVER_STYLE));
+      layer.on("mouseout", () => layer.setStyle(REGION_STYLE));
+      layer.on("click", () =>
+        map.fitBounds(layer.getBounds(), { padding: [50, 50], animate: true })
+      );
+    };
+
+    // Слой регионов
     const geoLayer = L.geoJSON(regionData, {
-      style: (feature) => ({
-        color: "#2222222a",
-        fillColor: "#22222204",
-        weight: 2,
-        fillOpacity: 0.3,
-      }),
-      onEachFeature: (feature, layer) => {
-        if (feature.properties && feature.properties.NAME_1) {
-          layer.bindPopup(`Регион: ${feature.properties.NAME_1}`);
-        }
-        layer.on("mouseover", () => {
-          layer.setStyle({ fillColor: "yellow" });
-        });
-        layer.on("mouseout", () => {
-          layer.setStyle({ fillColor: "#22222204" });
-        });
-      },
+      style: () => REGION_STYLE,
+      onEachFeature: onEachRegion,
     }).addTo(map);
+
+    // Кнопка сброса
+    const resetControl = L.control({ position: "topright" });
+    resetControl.onAdd = () => {
+      const button = L.DomUtil.create("button", "reset-btn");
+      button.innerHTML = "Сброс";
+      Object.assign(button.style, {
+        background: "#fff",
+        padding: "5px 10px",
+        cursor: "pointer",
+      });
+      button.onclick = () => map.setView(CENTER);
+      return button;
+    };
+
+    resetControl.addTo(map);
 
     return () => {
       map.remove();
