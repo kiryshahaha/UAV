@@ -272,7 +272,7 @@ async def get_city_data(
 
 
 @app.post("/admin/regions")
-async def add_region(
+async def add_region( 
     region: RegionCreate,
     db: Session = Depends(get_db)
 ):
