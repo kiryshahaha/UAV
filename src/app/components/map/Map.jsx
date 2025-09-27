@@ -33,6 +33,7 @@ export default function Map() {
       minZoom: MIN_ZOOM,
       maxZoom: MAX_ZOOM,
       attributionControl: false,
+      preferCanvas: true,
       maxBounds: L.latLngBounds(L.latLng(-90, -180), L.latLng(90, 180)),
       maxBoundsViscosity: 0.9,
       worldCopyJump: false,
