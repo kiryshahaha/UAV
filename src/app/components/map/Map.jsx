@@ -1,7 +1,7 @@
 "use client";
 import React, { useRef, useEffect } from "react";
 import "leaflet/dist/leaflet.css";
-import regionData from "./../../../../public/geoData/RussiaWhole.json";
+import regionData from "public/geoData/RussiaWhole.json";
 import styles from "./map.module.css";
 import { MapContainer, TileLayer, GeoJSON } from "./../leaflet/leaFletNoSSR.js";
 
