@@ -18,12 +18,12 @@ const Map = () => {
     minZoom: 2,
     maxZoom: 15,
     regionStyle: {
-      color: "#ffffff",
+      color: "#424d5b3d",
       fillColor: "#22222204",
       weight: 2,
       fillOpacity: 0.3,
     },
-    hoverStyle: { fillColor: "yellow" },
+    hoverStyle: { fillColor: "#aeff34ff" },
   };
 
   const onEachRegion = (feature, layer) => {
