@@ -1,12 +1,11 @@
 .mapContainer {
   height: 100%; 
-  border-radius: 22px;
+  border-radius: 0px;
   overflow: hidden;
-  background: #aad3df;
 }
 
 @media (max-width: 768px) {
     .mapContainer {
-        border-radius: 16px;
+        border-radius: 0px;
     }
 }

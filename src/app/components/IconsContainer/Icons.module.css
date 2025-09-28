@@ -1,0 +1,33 @@
+.iconsContainer{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    gap: 24px;
+    flex-direction: column;
+}
+
+.icon{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    /* padding: 4px; */
+    border-radius: 8px;
+    transition: background-color 0.2s;
+    background-color: var(--bg-color);
+    transition: all 0.3s ease;
+    height: 48px;
+    width: 48px;
+}
+
+.icon:hover{
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.icon:active{
+    transform: translateY(2px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+

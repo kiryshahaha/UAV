@@ -1,35 +1,56 @@
 .container{
-    display: flex;
-    padding: 10px;
-    gap: 10px;
-    position: relative;
-    height: 100dvh; 
-    box-sizing: border-box; 
-    flex-direction: row;
+    position: relative; /* Для абсолютного позиционирования дочерних элементов */
+    padding: 0;
+    margin: 0;
+    width: 100vw;
+    height: 100dvh;
+    overflow: hidden;
 }
 
 .LeftSearchBar{
-    width: 25%;
+    position: absolute;
+    top: 24px;
+    left: 24px;
+    width: 400px; 
+    z-index: 1000;
+    border-radius: 12px;
+}
+
+.Icons{
+    position: absolute;
+    bottom: 24px; 
+    left: 24px; 
+    z-index: 1000; 
 }
 
 .Map{
-    width: 85%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
 }
 
 @media (max-width: 768px) {
     .container {
-        flex-direction: column; /* Вертикальное расположение на мобильных */
-        padding: 5px;
-        gap: 5px;
+        height: 100lvh;
     }
     
     .LeftSearchBar {
-        width: 100%;
-        height: 60px; /* Фиксированная высота для поиска */
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        width: calc(100% - 20px);
+        z-index: 1000;
     }
     
     .Map {
+         position: absolute;
+        top: 0;
+        left: 0;
         width: 100%;
-        height: calc(100dvh - 70px); /* Оставшаяся высота минус поиск и отступы */
+        height: 100%;
     }
 }
