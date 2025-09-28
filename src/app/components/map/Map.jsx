@@ -1,95 +1,100 @@
 "use client";
-import React, { useEffect, useRef } from "react";
+import React, { useRef, useEffect } from "react";
+import "leaflet/dist/leaflet.css";
+import regionData from "./../../../../public/geoData/gadm41_RUS_whole.json";
 import styles from "./map.module.css";
-import regionData from "./../../../../public/geoData/gadm41_RUS_1.json";
+import { MapContainer, TileLayer, GeoJSON } from "./../leaflet/leaFletNoSSR.js";
 
-export default function Map() {
+const Map = () => {
   const mapRef = useRef(null);
 
-  useEffect(() => {
-    if (typeof window === "undefined" || mapRef.current) return;
-
-    const L = require("leaflet");
-
-    // Константы
-    const CENTER = [55.7522, 37.6156]; // Москва
-    const ZOOM = 5;
-    const MIN_ZOOM = 2;
-    const MAX_ZOOM = 15;
-
-    const REGION_STYLE = {
+  const CONFIG = {
+    center: [55.7522, 37.6156], // Москва
+    zoom: 5,
+    minZoom: 2,
+    maxZoom: 15,
+    regionStyle: {
       color: "#ffffff",
       fillColor: "#22222204",
       weight: 2,
       fillOpacity: 0.3,
-    };
+    },
+    hoverStyle: { fillColor: "yellow" },
+  };
 
-    const REGION_HOVER_STYLE = { fillColor: "yellow" };
+  const onEachRegion = (feature, layer) => {
+    if (feature.properties?.NAME_1) {
+      layer.bindPopup(feature.properties.NAME_1);
+    }
+    layer.on({
+      mouseover: () => layer.setStyle(CONFIG.hoverStyle),
+      mouseout: () => layer.setStyle(CONFIG.regionStyle),
+      click: () =>
+        mapRef.current?.fitBounds(layer.getBounds(), {
+          padding: [50, 50],
+          animate: true,
+        }),
+    });
+  };
 
-    // Создаем карту
-    const map = L.map("map", {
-      center: CENTER,
-      zoom: ZOOM,
-      minZoom: MIN_ZOOM,
-      maxZoom: MAX_ZOOM,
-      attributionControl: false,
-      preferCanvas: true,
-      maxBounds: L.latLngBounds(L.latLng(-90, -180), L.latLng(90, 180)),
-      maxBoundsViscosity: 0.9,
-      worldCopyJump: false,
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    const L = require("leaflet");
+
+    L.Control.Reset = L.Control.extend({
+      options: { position: "topright" },
+      onAdd: () => {
+        const button = L.DomUtil.create("button", "reset-btn");
+        button.innerHTML = "Сброс";
+        Object.assign(button.style, {
+          background: "#fff",
+          padding: "5px 10px",
+          cursor: "pointer",
+        });
+        button.onclick = () => map.setView(CONFIG.center, CONFIG.zoom);
+        return button;
+      },
     });
 
-    mapRef.current = map;
-    // map.locate({ setView: true, maxZoom: 6 });
-
-    // Слой OSM
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: "&copy; OpenStreetMap contributors",
-      keepBuffer: 10,
-      reuseTiles: true,
-      updateWhenIdle: false,
-    }).addTo(map);
-
-    // Функции для событий
-    const onEachRegion = (feature, layer) => {
-      if (feature.properties?.NAME_1) {
-        layer.bindPopup(`Регион: ${feature.properties.NAME_1}`);
-      }
-
-      layer.on("mouseover", () => layer.setStyle(REGION_HOVER_STYLE));
-      layer.on("mouseout", () => layer.setStyle(REGION_STYLE));
-      layer.on("click", () =>
-        map.fitBounds(layer.getBounds(), { padding: [50, 50], animate: true })
-      );
-    };
-
-    // Слой регионов
-    const geoLayer = L.geoJSON(regionData, {
-      style: () => REGION_STYLE,
-      onEachFeature: onEachRegion,
-    }).addTo(map);
-
-    // Кнопка сброса
-    const resetControl = L.control({ position: "topright" });
-    resetControl.onAdd = () => {
-      const button = L.DomUtil.create("button", "reset-btn");
-      button.innerHTML = "Сброс";
-      Object.assign(button.style, {
-        background: "#fff",
-        padding: "5px 10px",
-        cursor: "pointer",
-      });
-      button.onclick = () => map.setView(CENTER);
-      return button;
-    };
-
+    const resetControl = new L.Control.Reset();
     resetControl.addTo(map);
 
-    return () => {
-      map.remove();
-      mapRef.current = null;
-    };
+    return () => resetControl.remove();
   }, []);
 
-  return <div id="map" className={styles.mapContainer}></div>;
-}
+  return (
+    <MapContainer
+      center={CONFIG.center}
+      zoom={CONFIG.zoom}
+      minZoom={CONFIG.minZoom}
+      maxZoom={CONFIG.maxZoom}
+      className={styles.mapContainer}
+      attributionControl={false}
+      preferCanvas
+      maxBounds={[
+        [-90, -180],
+        [90, 180],
+      ]}
+      maxBoundsViscosity={0.9}
+      worldCopyJump={false}
+      ref={mapRef}
+    >
+      <TileLayer
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution="&copy; OpenStreetMap contributors"
+        keepBuffer={10}
+        reuseTiles
+        updateWhenIdle={false}
+      />
+      <GeoJSON
+        data={regionData}
+        style={CONFIG.regionStyle}
+        onEachFeature={onEachRegion}
+      />
+    </MapContainer>
+  );
+};
+
+export default Map;
