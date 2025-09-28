@@ -27,8 +27,8 @@ const Map = () => {
   };
 
   const onEachRegion = (feature, layer) => {
-    if (feature.properties?.NAME_1) {
-      layer.bindPopup(feature.properties.NAME_1);
+    if (feature.properties?.REGION_NAME) {
+      layer.bindPopup(feature.properties.REGION_NAME);
     }
     layer.on({
       mouseover: () => layer.setStyle(CONFIG.hoverStyle),
