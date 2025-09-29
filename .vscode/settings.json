@@ -1,0 +1,5 @@
+{
+    "python.analysis.extraPaths": [
+        "./back/excel_to_postgres"
+    ]
+}
