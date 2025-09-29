@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, forwardRef } from "react";
 import "leaflet/dist/leaflet.css";
 import regionData from "public/geoData/RussiaWhole.json";
 import styles from "./map.module.css";
@@ -10,7 +10,7 @@ import {
   GeoJSON,
 } from "@/components/leaflet/leaFletNoSSR.js";
 
-const Map = () => {
+const Map = forwardRef((props, ref) => {
   const mapRef = useRef(null);
 
   const CONFIG = {
@@ -85,7 +85,12 @@ const Map = () => {
       ]}
       maxBoundsViscosity={0.95}
       worldCopyJump={false}
-      ref={mapRef}
+      ref={(node) => {
+        mapRef.current = node;
+        if (ref) {
+          ref.current = node;
+        }
+      }}
     >
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -101,6 +106,8 @@ const Map = () => {
       />
     </MapContainer>
   );
-};
+});
+
+Map.displayName = "Map";
 
 export default Map;
