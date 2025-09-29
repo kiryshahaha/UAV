@@ -6,6 +6,8 @@ import Map from "@/components/map/Map";
 import Icons from "@/components/IconsContainer/Icons";
 import PlusMinus from "@/components/plusminus/PlusMinus";
 import { useRef } from "react";
+import ResetButton from "@/components/resetButton/ResetButton";
+import Filter from "@/components/Filter/Filter";
 
 export default function Home() {
   const mapRef = useRef(null);
@@ -20,7 +22,9 @@ export default function Home() {
       {/* Второй уровень - поиск и иконки */}
       <div className={styles.overlayContent}>
         <div className={styles.LeftSearchBar}>
-          <LeftSearchBar />
+          <LeftSearchBar mapRef={mapRef} />
+          <Filter />
+          <ResetButton mapRef={mapRef}></ResetButton>
         </div>
         <div className={styles.iconsContainer}>
           <div className={styles.icons}>
