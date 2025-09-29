@@ -17,7 +17,7 @@ const Map = () => {
     center: [55.7522, 37.6156], // Москва
     zoom: 5,
     minZoom: 2,
-    maxZoom: 15,
+    maxZoom: 16,
     ZoomControl: false,
     regionStyle: {
       color: "#424d5b3d",
