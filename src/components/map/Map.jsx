@@ -18,6 +18,7 @@ const Map = () => {
     zoom: 5,
     minZoom: 2,
     maxZoom: 15,
+    ZoomControl: false,
     regionStyle: {
       color: "#424d5b3d",
       fillColor: "#22222204",
@@ -73,6 +74,7 @@ const Map = () => {
     <MapContainer
       center={CONFIG.center}
       zoom={CONFIG.zoom}
+      zoomControl={CONFIG.ZoomControl}
       minZoom={CONFIG.minZoom}
       maxZoom={CONFIG.maxZoom}
       className={styles.mapContainer}
