@@ -1,4 +1,5 @@
-"use client";
+"use client"
+
 import React, { useRef, useEffect } from "react";
 import "leaflet/dist/leaflet.css";
 import regionData from "public/geoData/RussiaWhole.json";
