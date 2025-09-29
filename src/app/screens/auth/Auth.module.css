@@ -19,3 +19,10 @@
     display: flex;
     z-index: 2;
 }
+
+@media (max-width: 768px){
+    .AuthComponent{
+        width: 70%;
+}
+
+}

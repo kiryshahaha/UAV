@@ -1,5 +1,18 @@
 .container{
     display: flex;
     flex-direction: column;
-    gap: 45px
+    gap: 45px;
+
+}
+.logo{
+    display: flex;
+    justify-content: center;
+    align-items:center
+}
+
+.logpas{
+        display: flex;
+    justify-content: center;
+    align-items:center;
+    
 }

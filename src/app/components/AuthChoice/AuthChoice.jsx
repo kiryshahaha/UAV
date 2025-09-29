@@ -1,5 +1,7 @@
 import React from 'react'
 import styles from './AuthChoice.module.css'
+import Login from '../login/Login'
+import Password from '../password/Password'
 
 const AuthChoice = () => {
   return (
@@ -7,11 +9,11 @@ const AuthChoice = () => {
         <div className={styles.mainText}>
             <span className={styles.text}>Вход</span>
         </div>
-        <div className={styles.adminButton}>
-
+        <div className={styles.login}>
+          <Login />
         </div>
-        <div className={styles.operButton}>
-
+        <div className={styles.password}>
+          <Password />
         </div>
     </div>
   )

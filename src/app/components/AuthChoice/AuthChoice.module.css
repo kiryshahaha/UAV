@@ -1,0 +1,35 @@
+.container{
+    display: flex;
+    backdrop-filter: blur(2.5px);
+    background: rgba(128, 128, 128, 0.3);
+    padding: 20px;
+    border-radius: 12px;
+    justify-content: space-between;
+    align-items: center;
+    gap: 35px;
+    flex-direction: column;
+}
+
+.mainText{
+    display: flex;
+    text-align: center;
+
+}
+
+.text{
+    font-size: 32px;
+    font-weight: 400;
+    color: black;
+}
+
+.login{
+    display: flex;
+    justify-content: center;
+    align-items: center
+}
+
+.password{
+    display: flex;
+    justify-content: center;
+    align-items: center
+}
