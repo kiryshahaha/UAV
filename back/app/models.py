@@ -21,6 +21,27 @@ class Flight(Base):
     region = Column(String(50))
     created_at = Column(DateTime, default=datetime.utcnow)
 
+class FlightInfo(BaseModel):
+    reg_number: str
+    operator: str
+    flight_date: str
+    departure_point: str
+    arrival_point: Optional[str] = None
+    departure_time: str
+    arrival_time: str
+    flight_zone: Optional[str] = None
+    flight_zone_radius: Optional[str] = None
+    extra_info: Optional[str] = None
+
+class DroneFlight(BaseModel):
+    flight_zone: str  
+    flight_time: float  # в секундах или минутах
+    reg_number: str
+    date: datetime
+    operator: str
+    additional_info: str = None
+
+
 # Pydantic модели (схемы)
 class FlightBase(BaseModel):
     message_type: Optional[str] = "FPL"
