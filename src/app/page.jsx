@@ -3,6 +3,7 @@ import styles from "./page.module.css";
 import LeftSearchBar from "@/components/leftSearchBar/LeftSearchBar";
 import Map from "@/components/map/Map";
 import Icons from "@/components/IconsContainer/Icons";
+import PlusMinus from "@/components/plusminus/PlusMinus";
 
 export default function Home() {
   return (
@@ -17,8 +18,13 @@ export default function Home() {
         <div className={styles.LeftSearchBar}>
           <LeftSearchBar />
         </div>
-        <div className={styles.Icons}>
-          <Icons />
+        <div className={styles.iconsContainer}>
+          <div className={styles.icons}>
+            <Icons />
+          </div>
+          <div className={styles.icons}>
+            <PlusMinus />
+          </div>
         </div>
       </div>
     </div>
