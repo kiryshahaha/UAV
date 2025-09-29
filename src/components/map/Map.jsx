@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import React, { useRef, useEffect } from "react";
 import "leaflet/dist/leaflet.css";
@@ -17,7 +17,8 @@ const Map = () => {
     center: [55.7522, 37.6156], // Москва
     zoom: 5,
     minZoom: 2,
-    maxZoom: 15,
+    maxZoom: 16,
+    ZoomControl: false,
     regionStyle: {
       color: "#424d5b3d",
       fillColor: "#22222204",
@@ -45,7 +46,6 @@ const Map = () => {
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-
     const L = require("leaflet");
 
     L.Control.Reset = L.Control.extend({
@@ -73,6 +73,7 @@ const Map = () => {
     <MapContainer
       center={CONFIG.center}
       zoom={CONFIG.zoom}
+      zoomControl={CONFIG.ZoomControl}
       minZoom={CONFIG.minZoom}
       maxZoom={CONFIG.maxZoom}
       className={styles.mapContainer}
@@ -80,9 +81,9 @@ const Map = () => {
       preferCanvas
       maxBounds={[
         [-90, -180],
-        [90, 180],
+        [90, 190],
       ]}
-      maxBoundsViscosity={0.9}
+      maxBoundsViscosity={0.95}
       worldCopyJump={false}
       ref={mapRef}
     >
