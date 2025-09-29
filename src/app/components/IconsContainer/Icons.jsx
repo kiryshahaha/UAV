@@ -6,13 +6,38 @@ const Icons = () => {
     return (
         <div className={styles.iconsContainer}>
             <div className={styles.icon}>
-                <Image src='/svg/stat.svg' width={35} height={28} alt='stat-icon' />
+                {/*иконка для загрузки файла*/}
+                <div className={styles.imageWrapper}>
+                    <Image 
+                        src='/svg/Load.svg' 
+                        fill
+                        style={{objectFit: 'contain'}}
+                        alt='download-icon' 
+                    />
+                </div>
             </div>
             <div className={styles.icon}>
-                <Image src='/svg/brush.svg' width={22} height={22} alt='brush-icon' />
+                <div className={styles.imageWrapper}>
+                    <Image 
+                        src='/svg/stat.svg' 
+                        fill
+                        style={{objectFit: 'contain'}}
+                        alt='stat-icon' 
+                    />
+                </div>
+            </div>
+            <div className={styles.icon}>
+                <div className={styles.imageWrapper}>
+                    <Image 
+                        src='/svg/brush.svg' 
+                        fill
+                        style={{objectFit: 'contain'}}
+                        alt='brush-icon' 
+                    />
+                </div>
             </div>
         </div>
     )
 }
 
-export default Icons
+export default Icons;

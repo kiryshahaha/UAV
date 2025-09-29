@@ -7,14 +7,19 @@ import Icons from "./components/IconsContainer/Icons";
 export default function Home() {
   return (
     <div className={styles.container}>
-      <div className={styles.LeftSearchBar}>
-        <LeftSearchBar />
-      </div>
-      <div className={styles.Icons}>
-        <Icons />
-      </div>
+      {/* Первый уровень - карта */}
       <div className={styles.Map}>
         <Map />
+      </div>
+      
+      {/* Второй уровень - поиск и иконки */}
+      <div className={styles.overlayContent}>
+        <div className={styles.LeftSearchBar}>
+          <LeftSearchBar />
+        </div>
+        <div className={styles.Icons}>
+          <Icons />
+        </div>
       </div>
     </div>
   );
