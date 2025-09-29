@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import React, { useRef, useEffect } from "react";
 import "leaflet/dist/leaflet.css";
@@ -46,7 +46,6 @@ const Map = () => {
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-
     const L = require("leaflet");
 
     L.Control.Reset = L.Control.extend({
