@@ -82,9 +82,9 @@ const Map = () => {
       preferCanvas
       maxBounds={[
         [-90, -180],
-        [90, 180],
+        [90, 190],
       ]}
-      maxBoundsViscosity={0.9}
+      maxBoundsViscosity={0.95}
       worldCopyJump={false}
       ref={mapRef}
     >
