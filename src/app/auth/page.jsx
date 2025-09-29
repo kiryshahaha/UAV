@@ -1,8 +1,8 @@
 import React from 'react'
 import styles from './Auth.module.css'
 
-import Background from '@/app/components/background/Background'
-import AuthComponent from '@/app/components/authComponent/AuthComponent'
+import Background from '@/components/background/Background'
+import AuthComponent from '@/components/authComponent/AuthComponent'
 
 export default function auth() {
   return (

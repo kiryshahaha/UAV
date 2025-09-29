@@ -1,8 +1,8 @@
 import Image from "next/image";
 import styles from "./page.module.css";
-import LeftSearchBar from "./components/leftSearchBar/LeftSearchBar";
-import Map from "./components/map/Map"
-import Icons from "./components/IconsContainer/Icons";
+import LeftSearchBar from "@/components/leftSearchBar/LeftSearchBar";
+import Map from "@/components/map/Map";
+import Icons from "@/components/IconsContainer/Icons";
 
 export default function Home() {
   return (

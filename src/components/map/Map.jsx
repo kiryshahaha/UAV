@@ -8,7 +8,7 @@ import {
   MapContainer,
   TileLayer,
   GeoJSON,
-} from "@/app/components/leaflet/leaFletNoSSR.js";
+} from "@/components/leaflet/leaFletNoSSR.js";
 
 const Map = () => {
   const mapRef = useRef(null);
