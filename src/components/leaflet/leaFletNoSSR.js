@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 
-// React-Leaflet компоненты без SSR
+// компоненты без SSR
 export const MapContainer = dynamic(
   () => import("react-leaflet").then((mod) => mod.MapContainer),
   { ssr: false }

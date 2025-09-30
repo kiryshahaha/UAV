@@ -18,6 +18,8 @@ import {
 } from "@/components/leaflet/leaFletNoSSR.js";
 
 const Map = forwardRef((props, ref) => {
+  const { tileUrl, onTileUrlChange } = props;
+
   const mapRef = useRef(null);
   const markerClusterRef = useRef(null);
 
@@ -25,7 +27,6 @@ const Map = forwardRef((props, ref) => {
   const [rawDrones, setRawDrones] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Создаем иконку дрона
   useEffect(() => {
     import("leaflet").then((L) => {
       setDroneIcon(
@@ -40,7 +41,6 @@ const Map = forwardRef((props, ref) => {
     });
   }, []);
 
-  // Загрузка дронов
   useEffect(() => {
     async function fetchDrones() {
       try {
@@ -57,7 +57,6 @@ const Map = forwardRef((props, ref) => {
     fetchDrones();
   }, []);
 
-  // Мемоизация обработанных данных, уникальных по ID
   const drones = useMemo(() => {
     const seen = new Set();
     return rawDrones
@@ -102,6 +101,25 @@ const Map = forwardRef((props, ref) => {
     });
   };
 
+  // Добавляем метод для смены подложки
+  React.useImperativeHandle(ref, () => ({
+    changeTileLayer: (newUrl) => {
+      if (onTileUrlChange) {
+        onTileUrlChange(newUrl);
+      }
+    },
+    resetMap: () => {
+      if (mapRef.current) {
+        mapRef.current.setView(CONFIG.center, CONFIG.zoom);
+      }
+    },
+    updateCityData: (cityData) => {
+      if (mapRef.current && cityData.lat && cityData.lon) {
+        mapRef.current.setView([cityData.lat, cityData.lon], 12);
+      }
+    }
+  }));
+
   return (
     <div
       className={styles.mapWrapper}
@@ -128,7 +146,7 @@ const Map = forwardRef((props, ref) => {
         }}
       >
         <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          url={tileUrl}
           attribution="&copy; OpenStreetMap contributors"
         />
 
