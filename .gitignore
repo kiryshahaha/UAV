@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+myenv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
