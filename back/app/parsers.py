@@ -1,11 +1,9 @@
+# parsers.py
 import re
-from typing import Dict
 from datetime import datetime
-from models import FlightInfo
-from typing import Optional, List
-import psycopg2
+from typing import Dict, Tuple, Optional
 
-def parse_time(time_str: str):
+def parse_time(time_str: str) -> Optional[datetime]:
     """Преобразует строку 'HH:MM:SS' в datetime.time, игнорирует некорректные значения"""
     try:
         if not time_str or time_str.upper() == "ZZ:ZZ:00":
@@ -13,9 +11,9 @@ def parse_time(time_str: str):
         return datetime.strptime(time_str, "%H:%M:%S")
     except Exception:
         return None
-    
 
-def parse_coord(coord_str: str):
+def parse_coord(coord_str: str) -> Tuple[Optional[float], Optional[float]]:
+    """Парсит координаты из строки"""
     if not coord_str:
         return None, None
     match = re.match(r"(\d{2,3})(\d{2})([NS])(\d{3})(\d{2})([EW])", coord_str.strip())
@@ -34,8 +32,7 @@ def parse_coord(coord_str: str):
 
     return round(lat, 6), round(lon, 6)
 
-
-def convert_coord(coord: str) -> Dict[str, float]:
+def convert_coord(coord: str) -> Dict[str, Optional[float]]:
     """
     Конвертирует координаты из формата '5957N02905E' в {latitude, longitude}
     """
@@ -60,7 +57,7 @@ def convert_coord(coord: str) -> Dict[str, float]:
     except Exception:
         return {"latitude": None, "longitude": None}
 
-def parse_flight_duration(dep: str, arr: str) -> float | None:
+def parse_flight_duration(dep: str, arr: str) -> Optional[float]:
     """
     Преобразует время отправления и прибытия в длительность в минутах.
     Возвращает None, если данные некорректные.
@@ -75,4 +72,3 @@ def parse_flight_duration(dep: str, arr: str) -> float | None:
         return duration
     except Exception:
         return None
-

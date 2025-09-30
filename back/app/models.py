@@ -39,7 +39,7 @@ class DroneFlight(BaseModel):
     reg_number: str
     date: datetime
     operator: str
-    additional_info: str = None
+    additional_info: Optional[str] = None
 
 
 # Pydantic модели (схемы)
@@ -52,11 +52,11 @@ class FlightBase(BaseModel):
     departure_time: Optional[str] = None
     route: Optional[str] = None
     region: str
-    source_table: Optional[str]
+    source_table: Optional[str] = None
 
 class FlightResponse(FlightBase):
     id: int
-    created_at: Optional[datetime]=None
+    created_at: Optional[datetime] = None
     
     class Config:
         from_attributes = True
