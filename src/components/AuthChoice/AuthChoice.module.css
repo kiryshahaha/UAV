@@ -8,12 +8,13 @@
     align-items: center;
     gap: 35px;
     flex-direction: column;
+    width: 100%;
+    max-width: 400px;
 }
 
 .mainText{
     display: flex;
     text-align: center;
-
 }
 
 .text{
@@ -22,14 +23,40 @@
     color: black;
 }
 
-.login{
+.login, .password{
     display: flex;
     justify-content: center;
-    align-items: center
+    align-items: center;
+    width: 100%;
 }
 
-.password{
-    display: flex;
-    justify-content: center;
-    align-items: center
+.loginButton {
+    width: 100%;
+    padding: 12px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.loginButton:hover {
+    background: #0056b3;
+}
+
+.loginButton:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+}
+
+.error {
+    color: #dc3545;
+    text-align: center;
+    padding: 8px;
+    background: rgba(220, 53, 69, 0.1);
+    border-radius: 4px;
+    width: 100%;
+    font-size: 14px;
 }
