@@ -68,7 +68,7 @@ function parseSHR(message) {
           .trim()
           .split(/[\s,]+/)
           .filter(Boolean)
-          .map((r) => r.replace(/,$/, "").replace(/^REG/, "")) // Убираем "REG" из REG00725
+          .map((r) => r.replace(/,$/, "").replace(/^REG/, "")) 
           .join(", ");
       } else {
         result[key] = match[1].trim();

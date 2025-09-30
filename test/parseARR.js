@@ -12,7 +12,7 @@ function parseARR(message) {
     { key: 'adarr', pattern: /-ADARR\s+([^\s]+)/i },
     {
       key: 'adarrz',
-      pattern: /-ADARRZ\s+.*?(\d{4,6}[NS]\d{5,7}[EW])/i, // Match coordinate after any text
+      pattern: /-ADARRZ\s+.*?(\d{4,6}[NS]\d{5,7}[EW])/i, 
       transform: parseCoordinate,
     },
     { key: 'pap', pattern: /-PAP\s+(\d+)/i },

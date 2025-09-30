@@ -3,7 +3,7 @@ const { parseCoordinate } = require("./parseCoordinate");
 function parseDEP(message) {
   if (!message) return {};
 
-  const cleanMessage = message.replace(/\r\n/g, ' '); // Remove newlines
+  const cleanMessage = message.replace(/\r\n/g, ' ');
   const result = {};
   const fields = [
     { key: "sid", pattern: /-SID\s+(\d+)/i, transform: Number },
@@ -16,7 +16,7 @@ function parseDEP(message) {
     { key: "adep", pattern: /-ADEP\s+([^\s]+)/i },
     {
       key: "adepz",
-      pattern: /-ADEPZ\s+.*?(\d{4,6}[NS]\d{5,7}[EW])/i, // Match coordinate after any text
+      pattern: /-ADEPZ\s+.*?(\d{4,6}[NS]\d{5,7}[EW])/i, 
       transform: parseCoordinate,
     },
     { key: "pap", pattern: /-PAP\s+(\d+)/i, transform: Number },

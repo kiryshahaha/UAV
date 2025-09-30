@@ -62,7 +62,7 @@ async function main() {
     console.log(`Processed sheet '${sheetName}': ${data.length} rows`);
   }
 
-  // Удаляем дубликаты
+
   const uniqueData = removeDuplicates(combinedData);
 
   if (uniqueData.length) {

@@ -3,7 +3,7 @@ function parseCoordinate(coord) {
 
   coord = coord.replace(/\s+/g, "").toUpperCase();
 
-  // Pattern 1: ddmmNdddmmE (e.g., 5957N02905E)
+
   let match = coord.match(/^(\d{2})(\d{2})([NS])(\d{3})(\d{2})([EW])$/);
   if (match) {
     const latDeg = parseInt(match[1], 10);
@@ -17,7 +17,7 @@ function parseCoordinate(coord) {
     return { latitude: +lat.toFixed(6), longitude: +lon.toFixed(6) };
   }
 
-  // Pattern 2: ddmmssNdddmmssE (e.g., 440846N0430829E)
+
   match = coord.match(
     /^(\d{2})(\d{2})(\d{2})([NS])(\d{3})(\d{2})(\d{2})([EW])$/
   );

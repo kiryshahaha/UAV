@@ -6,14 +6,14 @@ function parsePhones(message) {
   const rawPhones = message.match(phoneRegex) || [];
 
   const normalized = rawPhones
-    .map((p) => p.replace(/[^\d]/g, "")) // оставляем только цифры
+    .map((p) => p.replace(/[^\d]/g, "")) 
     .map((p) => {
       if (p.length === 11 && p.startsWith("8")) return "+7" + p.slice(1);
       if (p.length === 11 && p.startsWith("7")) return "+" + p;
       return null;
     })
     .filter(Boolean)
-    .filter((p, index, self) => self.indexOf(p) === index); // убираем дубликаты
+    .filter((p, index, self) => self.indexOf(p) === index); 
 
   return normalized;
 }

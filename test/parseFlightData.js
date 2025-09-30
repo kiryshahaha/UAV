@@ -8,10 +8,9 @@ function parseFlightData(data, idCounter) {
     const depData = parseDEP(row.dep || "");
     const arrData = parseARR(row.arr || "");
 
-    // Унифицируем reg: приоритет у SHR, затем DEP, затем ARR
     const reg = shrData.reg || depData.reg || arrData.reg || null;
     
-    // Унифицируем sid: приоритет у SHR, затем DEP, затем ARR
+ 
     const sid = shrData.sid || depData.sid || arrData.sid || null;
 
     return {
@@ -19,10 +18,8 @@ function parseFlightData(data, idCounter) {
       center: row.center,
       source_sheet: row.source_sheet,
       
-      // SHR оставляем нетронутым
       shr: row.shr || "",
       
-      // Основные поля
       dof: shrData.dof || null,
       sid: sid,
       reg: reg,
@@ -41,13 +38,13 @@ function parseFlightData(data, idCounter) {
   });
 }
 
-// Функция для удаления дубликатов по ключевым полям
+
 function removeDuplicates(flightData) {
   const seen = new Set();
   const uniqueData = [];
 
   for (const flight of flightData) {
-    // Создаем ключ для сравнения - комбинация самых важных полей
+
     const key = JSON.stringify({
       sid: flight.sid,
       dof: flight.dof,
