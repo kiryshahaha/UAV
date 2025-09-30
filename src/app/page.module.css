@@ -39,7 +39,12 @@
 }
 
 .LeftSearchBar,
-.iconsContainer,
+.iconsContainer {
+    pointer-events: none;
+}
+
+/* И включаем pointer-events только для кликабельных элементов */
+.searchFilter,
 .icons {
     pointer-events: auto;
 }
@@ -58,7 +63,7 @@
 .searchFilter{
   display: flex;
   flex-direction: row;  
-      gap: 24px;
+    gap: 24px;
 }
 
 .iconsContainer{
@@ -72,6 +77,62 @@
 .icons{
     display: flex;
     align-items: end;
+}
+
+/* Добавляем стили для панели пользователя */
+.userPanel {
+    /* position: absolute; */
+    top: 60px;
+    right: 20px;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 10px 15px;
+    border-radius: 8px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    pointer-events: auto;
+}
+
+.userInfo {
+    font-size: 14px;
+    color: #333;
+    font-weight: 500;
+}
+
+.logoutButton {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background 0.3s;
+}
+
+.logoutButton:hover {
+    background: #c82333;
+}
+
+.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-size: 18px;
+    color: #333;
+}
+
+.PlusMinusReset{
+    display: flex;
+    flex-direction: column;
+    justify-content: end;
+    gap: 24px;
+    align-items: flex-end;
+
 }
 
 @media (max-width: 768px) {
@@ -100,10 +161,41 @@
         width: 100%;
         height: 100%;
     }
+
+    .searchFilter{
+        gap: 16px;
+    }
+
+    /* Адаптивные стили для панели пользователя */
+    .userPanel {
+        top: 10px;
+        right: 10px;
+        padding: 8px 12px;
+        gap: 10px;
+    }
+
+    .userInfo {
+        font-size: 12px;
+    }
+
+    .logoutButton {
+        padding: 6px 10px;
+        font-size: 11px;
+    }
 }
 
 @media (max-width: 380px) and (max-height: 700px) {
     .overlayContent {
         padding: 12px; /* Еще меньше паддинг на маленьких экранах */
+    }
+
+    .userPanel {
+        top: 8px;
+        right: 8px;
+        padding: 6px 10px;
+    }
+
+    .userInfo {
+        font-size: 11px;
     }
 }

@@ -1,10 +1,5 @@
 import { NextResponse } from 'next/server'
 
-const mockCities = [
-  "Московский", "Красноярский", "Новосибирский", "Екатеринбургский",
-  "Ростовский", "Самарский", "Хабаровский", "Петропавловск-Камчатский"
-]
-
 async function searchCities(searchTerm) {
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
   
@@ -13,23 +8,25 @@ async function searchCities(searchTerm) {
       ? `${API_URL}/cities?search=${encodeURIComponent(searchTerm)}`
       : `${API_URL}/cities`
     
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // Увеличиваем до 10 секунд
+    
     const response = await fetch(url, {
-      signal: AbortSignal.timeout(3000),
+      signal: controller.signal,
     })
+    
+    clearTimeout(timeoutId);
     
     if (response.ok) {
       const data = await response.json()
-      console.log('✅ Города получены с бэкенда:', data.cities)
-      return data.cities
+      console.log('✅ Города получены с бэкенда:', data.cities?.length || 0)
+      return data.cities || []
     } else {
       throw new Error(`HTTP ${response.status}`)
     }
   } catch (error) {
-    console.warn('❌ Backend недоступен, используем mock данные:', error.message)
-    // Фильтруем mock данные по поисковому запросу
-    return mockCities.filter(city => 
-      !searchTerm || city.toLowerCase().includes(searchTerm.toLowerCase())
-    ).slice(0, 10)
+    console.error('❌ Ошибка при получении городов с бэкенда:', error.message)
+    return []
   }
 }
 
@@ -40,7 +37,7 @@ export async function GET(request) {
   try {
     const cities = await searchCities(searchTerm)
     
-    console.log('Найдено городов:', cities.length)
+    console.log(`Найдено городов для "${searchTerm}":`, cities.length)
 
     return NextResponse.json({ 
       cities: cities,
@@ -48,13 +45,9 @@ export async function GET(request) {
     })
   } catch (error) {
     console.error('Error in cities API:', error)
-    const filteredCities = mockCities.filter(city => 
-      city.toLowerCase().includes(searchTerm)
-    ).slice(0, 10)
-    
     return NextResponse.json({ 
-      cities: filteredCities,
-      total: filteredCities.length
+      cities: [],
+      total: 0
     })
   }
 }
