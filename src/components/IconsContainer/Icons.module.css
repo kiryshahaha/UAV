@@ -31,6 +31,13 @@
     height: 60%; 
 }
 
+.message {
+    color: #333;
+    font-size: 14px;
+    margin-top: 5px;
+    text-align: center;
+}
+
 @media (min-width: 769px) {
     .iconsContainer {
         flex-direction: column;

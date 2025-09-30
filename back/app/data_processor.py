@@ -1,25 +1,36 @@
+# data_processor.py
 import pandas as pd
 import re
 import unicodedata
 import logging
 from datetime import datetime
 from sqlalchemy import create_engine, inspect, text, types as sa_types
+from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 
 class DataProcessor:
     """Упрощенный обработчик данных с добавлением уникальных ID"""
 
-    def __init__(self, db_connection_string):
-        """Инициализация с подключением к базе данных"""
-        self.engine = create_engine(db_connection_string)
+    def __init__(self, db_connection_string=None, db_session=None):
+        """Инициализация с подключением к базе данных или существующей сессией"""
+        if db_session:
+            self.db = db_session
+            self.engine = db_session.bind
+        elif db_connection_string:
+            self.engine = create_engine(db_connection_string)
+            self.db = None
+        else:
+            raise ValueError("Необходимо указать либо db_connection_string, либо db_session")
+            
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.INFO)
 
         # Настройка формата логов
-        handler = logging.StreamHandler()
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        handler.setFormatter(formatter)
-        self.logger.addHandler(handler)
+        if not self.logger.handlers:
+            handler = logging.StreamHandler()
+            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            handler.setFormatter(formatter)
+            self.logger.addHandler(handler)
 
     @staticmethod
     def clean_column_names(columns):
@@ -266,32 +277,33 @@ class DataProcessor:
             self.logger.info(f"Начало сохранения {len(df)} строк в таблицу {table_name}")
 
             # Очищаем DataFrame перед сохранением
-            df_cleaned = self.clean_dataframe(df)
+            df_cleaned = DataProcessor.clean_dataframe(df)
             if df_cleaned.empty:
                 self.logger.info("Нет данных для сохранения")
                 return {"added": 0, "total": 0}
 
-            # Проверяем существование таблицы
-            inspector = inspect(self.engine)
-            table_exists = inspector.has_table(table_name)
+            # Используем существующее подключение или создаем новое
+            if self.db:
+                # Используем существующую сессию
+                connection = self.db.connection()
+            else:
+                # Создаем новое подключение
+                connection = self.engine.connect()
 
-            if table_exists:
-                self.logger.info(f"Таблица {table_name} существует, пересоздаем...")
-                
-                # УДАЛЯЕМ существующую таблицу и создаем новую с правильной структурой
-                with self.engine.connect() as conn:
-                    conn.execute(text(f"DROP TABLE IF EXISTS {table_name}"))
-                    conn.commit()
-                
-                table_exists = False
-                self.logger.info("Существующая таблица удалена")
+            try:
+                # Проверяем существование таблицы
+                inspector = inspect(self.engine)
+                table_exists = inspector.has_table(table_name)
 
-            if not table_exists:
-                # СОЗДАЕМ НОВУЮ ТАБЛИЦУ с правильной структурой
-                self.logger.info(f"Создание новой таблицы {table_name}...")
+                if table_exists:
+                    self.logger.info(f"Таблица {table_name} существует, пересоздаем...")
+                    
+                    # УДАЛЯЕМ существующую таблицу и создаем новую с правильной структурой
+                    connection.execute(text(f"DROP TABLE IF EXISTS {table_name}"))
+                    connection.commit()
                 
-                # Создаем таблицу с автоинкрементным ID
-                dtypes = self.map_pandas_to_postgres_types(df_cleaned)
+                # Создаем таблицу с данными
+                dtypes = DataProcessor.map_pandas_to_postgres_types(df_cleaned)
                 
                 # Создаем таблицу
                 df_cleaned.to_sql(
@@ -304,16 +316,14 @@ class DataProcessor:
                 )
                 
                 # Добавляем автоинкрементный ID
-                with self.engine.connect() as conn:
-                    # Проверяем, есть ли уже колонка id
-                    columns_after = [col['name'] for col in inspector.get_columns(table_name)]
-                    if 'id' not in columns_after:
-                        conn.execute(text(f"""
-                            ALTER TABLE {table_name} ADD COLUMN id SERIAL PRIMARY KEY;
-                        """))
-                        self.logger.info("Добавлена колонка id SERIAL PRIMARY KEY")
-                    
-                    conn.commit()
+                columns_after = [col['name'] for col in inspector.get_columns(table_name)]
+                if 'id' not in columns_after:
+                    connection.execute(text(f"""
+                        ALTER TABLE {table_name} ADD COLUMN id SERIAL PRIMARY KEY;
+                    """))
+                    self.logger.info("Добавлена колонка id SERIAL PRIMARY KEY")
+                
+                connection.commit()
                 
                 added_count = len(df_cleaned)
                 self.logger.info(f"Создана новая таблица {table_name} с {added_count} записями")
@@ -323,6 +333,11 @@ class DataProcessor:
                     "total": added_count
                 }
 
+            finally:
+                # Закрываем подключение только если мы его создавали
+                if not self.db:
+                    connection.close()
+                    
         except SQLAlchemyError as e:
             self.logger.error(f"Ошибка при сохранении в PostgreSQL: {e}")
             raise

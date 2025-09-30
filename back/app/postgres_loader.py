@@ -2,7 +2,7 @@ from sqlalchemy import create_engine, text
 import psycopg2
 import pandas as pd
 from sqlalchemy import text
-from config.database import DatabaseConfig
+from data_integrator import DatabaseConfig  # Changed from config.database
 
 class PostgresLoader:
     """Загрузчик данных в PostgreSQL"""
@@ -60,7 +60,7 @@ class PostgresLoader:
         """
         try:
             # Получаем типы данных для маппинга
-            from parsers.data_processor import DataProcessor
+            from data_processor import DataProcessor  # Changed from parsers.data_processor
             dtypes = DataProcessor.map_pandas_to_postgres_types(df)
             
             # Создаем таблицу если нужно
@@ -82,13 +82,13 @@ class PostgresLoader:
         except Exception as e:
             raise Exception(f"Ошибка при загрузке данных: {e}")
     
-def get_table_info(self, table_name):
-    """Получить информацию о таблице"""
-    try:
-        # Простой способ через pandas
-        import pandas as pd
-        query = f"SELECT * FROM {table_name} LIMIT 0"
-        df = pd.read_sql_query(query, self.engine)
-        return [{'column_name': col, 'data_type': str(dtype)} for col, dtype in df.dtypes.items()]
-    except Exception as e:
-        raise Exception(f"Ошибка при получении информации о таблице: {e}")
+    def get_table_info(self, table_name):
+        """Получить информацию о таблице"""
+        try:
+            # Простой способ через pandas
+            import pandas as pd
+            query = f"SELECT * FROM {table_name} LIMIT 0"
+            df = pd.read_sql_query(query, self.engine)
+            return [{'column_name': col, 'data_type': str(dtype)} for col, dtype in df.dtypes.items()]
+        except Exception as e:
+            raise Exception(f"Ошибка при получении информации о таблице: {e}")

@@ -10,7 +10,13 @@ import logging
 from pydantic import BaseModel
 import json
 from collections import defaultdict
-from parsers import parse_coord, convert_coord, parse_flight_duration, parse_time
+from flight_parsers import parse_coord, convert_coord, parse_flight_duration, parse_time
+import geopandas as gpd
+
+from fastapi import UploadFile, File
+from excel_parser import ExcelParser
+from data_processor import DataProcessor
+from postgres_loader import PostgresLoader 
 
 
 # Настройка логирования
@@ -139,6 +145,13 @@ async def get_main_data(db: Session = Depends(get_db)):
     try:
         # Получаем имена нужных колонок
         columns = _get_required_columns(db)
+        logger.info(f"Required columns: {columns}")  # Дебаг — проверим, что возвращает
+
+        # Проверка и fallback для 'dep'
+        if "dep" not in columns or columns["dep"] is None:
+            columns["dep"] = 'dep_1'  # Фоллбэк на существующую колонку
+            logger.warning("Fallback to 'dep_1' for dep column, as 'dep' not found")
+
         if not all(columns.values()):
             missing = [k for k, v in columns.items() if not v]
             raise HTTPException(status_code=400, detail=f"Отсутствуют обязательные колонки: {missing}")
@@ -148,7 +161,7 @@ async def get_main_data(db: Session = Depends(get_db)):
             f'"{columns["reg"]}" as reg',
             f'"{columns["opr"]}" as opr',
             f'"{columns["typ"]}" as typ',
-            f'"{columns["dep"]}" as dep',
+            f'"{columns["dep"]}" as dep',  # Теперь columns["dep"] = 'dep_1'
             f'"{columns["dest"]}" as dest',
             f'"{columns["flight_zone_radius"]}" as flight_zone_radius',
             f'"{columns["flight_level"]}" as flight_level',
@@ -160,7 +173,6 @@ async def get_main_data(db: Session = Depends(get_db)):
         result = _execute_safe_query(db, query)
 
         data = [dict(row) for row in result.mappings().all()]
-
         return {
             "data": data,
             "count": len(data),
@@ -169,7 +181,6 @@ async def get_main_data(db: Session = Depends(get_db)):
     except Exception as e:
         logger.error(f"Ошибка на главной странице: {e}")
         raise HTTPException(status_code=500, detail=f"Ошибка: {str(e)}")
-
 
 @app.get("/statistics")
 async def get_statistics(
@@ -351,6 +362,54 @@ def init_region_map():
 ##### =============================================================================
 ##### =============================================================================
 
+@app.get("/cities")
+async def get_cities(
+    search: Optional[str] = Query(None, description="Поисковый запрос"),
+    db: Session = Depends(get_db)
+):
+    """Возвращает список уникальных городов/регионов для автодополнения"""
+    try:
+        # Ищем колонку с центром ЕС ОРВД
+        center_column = _find_column_case_insensitive(db, TARGET_TABLE, [
+            "tsentr_es_orvd", "TSENTR_ES_ORVD", "центр", "center"
+        ])
+
+        if not center_column:
+            raise HTTPException(
+                status_code=400,
+                detail="Не найдена колонка с центром ЕС ОРВД"
+            )
+
+        # Базовый запрос
+        query = f"""
+            SELECT DISTINCT "{center_column}" as city
+            FROM {TARGET_TABLE}
+            WHERE "{center_column}" IS NOT NULL 
+            AND "{center_column}" != ''
+        """
+
+        params = {}
+        
+        # Добавляем поиск если есть search параметр
+        if search:
+            query += f' AND "{center_column}" ILIKE :search'
+            params["search"] = f"%{search}%"
+
+        query += " ORDER BY city LIMIT 20"
+
+        result = _execute_safe_query(db, query, params)
+        cities = [row[0] for row in result.fetchall()]
+
+        return {
+            "cities": cities,
+            "total": len(cities),
+            "search_term": search
+        }
+
+    except Exception as e:
+        logger.error(f"Ошибка в /cities: {e}")
+        raise HTTPException(status_code=500, detail=f"Ошибка: {str(e)}")
+
 @app.get("/stats/regions", response_model=List[Dict])
 def get_stats_regions(db: Session = Depends(get_db)):
     try:
@@ -493,6 +552,66 @@ def get_flight(flight_id: int, db: Session = Depends(get_db)):
     }
 
 
+@app.post("/api/upload")
+async def upload_file(file: UploadFile = File(...), db: Session = Depends(get_db)):
+    try:
+        logger.info(f"Начало загрузки файла: {file.filename}")
+        
+        # Сохраняем файл временно
+        contents = await file.read()
+        temp_filename = f"temp_{file.filename}"
+        with open(temp_filename, "wb") as f:
+            f.write(contents)
+        logger.info(f"Файл сохранен как: {temp_filename}")
+
+        # Парсим Excel
+        excel_parser = ExcelParser()
+        excel_parser.excel_file_path = temp_filename
+        all_sheets = excel_parser.read_all_excel_sheets()
+        logger.info(f"Прочитано листов: {len(all_sheets)}")
+
+        # Обрабатываем и загружаем данные используя существующую сессию БД
+        data_processor = DataProcessor(db_session=db)
+        
+        total_records = 0
+        for sheet_name, df in all_sheets.items():
+            logger.info(f"Обработка листа: {sheet_name}, строк: {len(df)}")
+            
+            # Очищаем данные - используем статический метод ПРАВИЛЬНО
+            df_cleaned = DataProcessor.clean_dataframe(df)  # Просто вызываем как статический метод
+            logger.info(f"После очистки: {len(df_cleaned)} строк")
+            
+            if not df_cleaned.empty:
+                # Дешифруем поля плана полета
+                df_decoded = data_processor.decode_flight_plan_fields(df_cleaned)
+                logger.info(f"После декодирования: {len(df_decoded)} строк")
+                
+                # Сохраняем в таблицу
+                result = data_processor.save_to_table_with_id(df_decoded, TARGET_TABLE)
+                total_records += result.get("added", 0)
+                logger.info(f"Сохранено в базу: {result.get('added', 0)} записей")
+            else:
+                logger.warning(f"Лист {sheet_name} пуст после очистки")
+
+        # Удаляем временный файл
+        os.remove(temp_filename)
+        logger.info(f"Временный файл удален")
+
+        return {
+            "message": f"Успешно загружено {len(all_sheets)} листов, {total_records} записей в {TARGET_TABLE}",
+            "sheets_processed": len(all_sheets),
+            "records_added": total_records
+        }
+        
+    except Exception as e:
+        logger.error(f"Ошибка при загрузке файла: {e}", exc_info=True)
+        # Убедимся, что временный файл удален даже при ошибке
+        try:
+            if 'temp_filename' in locals():
+                os.remove(temp_filename)
+        except:
+            pass
+        raise HTTPException(status_code=500, detail=f"Ошибка при загрузке: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn
