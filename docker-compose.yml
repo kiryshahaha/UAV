@@ -1,0 +1,32 @@
+version: "3.9"
+
+services:
+  backend:
+    build: 
+      context: .
+      dockerfile: back/Dockerfile
+    container_name: uav_backend
+    env_file:
+      - back/.env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: uav_frontend
+    environment:
+      NEXT_PUBLIC_BACKEND_URL: http://backend:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+  redis:
+    image: redis:latest
+    container_name: uav_redis
+    ports:
+      - "6379:6379"

@@ -7,14 +7,55 @@ const Search = ({ onCitySelect }) => {
   const [cities, setCities] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
+  const [hasBeenFocused, setHasBeenFocused] = useState(false)
+  const [allCitiesCache, setAllCitiesCache] = useState([]) // Кэш для всех городов
   const dropdownRef = useRef(null)
+  const inputRef = useRef(null)
+
+  // Загрузка всех городов при фокусе
+  const loadAllCities = async () => {
+    // Если города уже загружены в кэш, используем их
+    if (allCitiesCache.length > 0) {
+      setCities(allCitiesCache)
+      if (hasBeenFocused) {
+        setShowDropdown(true)
+      }
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const response = await fetch('/api/cities')
+      if (response.ok) {
+        const data = await response.json()
+        const citiesData = data.cities || []
+        setCities(citiesData)
+        setAllCitiesCache(citiesData) // Сохраняем в кэш
+        if (hasBeenFocused) {
+          setShowDropdown(citiesData.length > 0)
+        }
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки городов:', error)
+      setCities([])
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   // Поиск городов при изменении текста
   useEffect(() => {
     const searchCities = async () => {
-      if (searchTerm.length < 2) {
-        setCities([])
-        setShowDropdown(false)
+      if (searchTerm.length === 0) {
+        // Если поле пустое, показываем все города из кэша
+        if (hasBeenFocused) {
+          if (allCitiesCache.length > 0) {
+            setCities(allCitiesCache)
+            setShowDropdown(true)
+          } else {
+            await loadAllCities()
+          }
+        }
         return
       }
 
@@ -34,25 +75,31 @@ const Search = ({ onCitySelect }) => {
       }
     }
 
-    const timeoutId = setTimeout(searchCities, 300)
+    const timeoutId = setTimeout(searchCities, 500) // Увеличиваем задержку до 500мс
     return () => clearTimeout(timeoutId)
-  }, [searchTerm])
+  }, [searchTerm, hasBeenFocused, allCitiesCache])
 
-  // Закрытие dropdown при клике вне компонента
+  // Закрытие dropdown и снятие фокуса при клике вне компонента
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdown(false)
+        if (inputRef.current) {
+          inputRef.current.blur()
+        }
       }
     }
 
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    document.addEventListener('click', handleClickOutside)
+    return () => document.removeEventListener('click', handleClickOutside)
   }, [])
 
   const handleCitySelect = (city) => {
     setSearchTerm(city)
     setShowDropdown(false)
+    if (inputRef.current) {
+      inputRef.current.blur()
+    }
     if (onCitySelect) {
       onCitySelect(city)
     }
@@ -62,43 +109,107 @@ const Search = ({ onCitySelect }) => {
     setSearchTerm(e.target.value)
   }
 
-  const handleInputFocus = () => {
-    if (cities.length > 0) {
+  const handleInputFocus = async () => {
+    setHasBeenFocused(true)
+    // При фокусе используем кэшированные города или загружаем
+    if (allCitiesCache.length > 0) {
+      setCities(allCitiesCache)
       setShowDropdown(true)
+    } else {
+      await loadAllCities()
     }
   }
 
+  const handleInputBlur = () => {
+    // Оставляем пустым, так как обрабатываем через handleClickOutside
+  }
+
+  const handleClearSearch = () => {
+    setSearchTerm('')
+    // После очистки возвращаем все города из кэша
+    if (allCitiesCache.length > 0) {
+      setCities(allCitiesCache)
+    }
+    setShowDropdown(false)
+    if (onCitySelect) {
+      onCitySelect(null)
+    }
+    if (inputRef.current) {
+      inputRef.current.focus()
+    }
+  }
+
+  const handleDropdownClick = (e) => {
+    e.stopPropagation()
+  }
+
+  const handleContainerClick = (e) => {
+    e.stopPropagation()
+  }
+
   return (
-    <div className={styles.searchWrapper} ref={dropdownRef}>
-      <div className={styles.searchContainer}>
+    <div 
+      className={styles.searchWrapper} 
+      ref={dropdownRef}
+      onClick={handleContainerClick}
+    >
+      <div 
+        className={`${styles.searchContainer} ${showDropdown ? styles.searchContainerOpen : ''}`}
+        onClick={handleContainerClick}
+      >
         <Image src='/svg/search.svg' width={25} height={25} alt='search-icon'/>
         <input 
+          ref={inputRef}
           type="text" 
           className={styles.searchInput}
           placeholder="Поиск города..."
           value={searchTerm}
           onChange={handleInputChange}
           onFocus={handleInputFocus}
+          onBlur={handleInputBlur}
+          onClick={handleContainerClick}
         />
+        {searchTerm && (
+          <button 
+            className={styles.clearButton}
+            onClick={handleClearSearch}
+            type="button"
+          >
+            <Image src='/svg/close.svg' width={16} height={16} alt='clear'/>
+          </button>
+        )}
         {isLoading && (
           <div className={styles.loader}></div>
         )}
       </div>
       
-      {/* Выпадающий список городов */}
-      {showDropdown && (
-        <div className={styles.dropdown}>
-          {cities.map((city, index) => (
-            <div 
-              key={index}
-              className={styles.dropdownItem}
-              onClick={() => handleCitySelect(city)}
-            >
-              {city}
-            </div>
-          ))}
-        </div>
-      )}
+      <div 
+        className={`${styles.dropdown} ${showDropdown ? styles.dropdownOpen : ''}`}
+        onClick={handleDropdownClick}
+      >
+        {cities.map((city, index) => (
+          <div 
+            key={index}
+            className={styles.dropdownItem}
+            onClick={(e) => {
+              e.stopPropagation()
+              handleCitySelect(city)
+            }}
+          >
+            {city}
+          </div>
+        ))}
+        {cities.length === 0 && !isLoading && searchTerm && (
+          <div className={styles.dropdownItem}>
+            Города не найдены
+          </div>
+        )}
+        {cities.length === 0 && !isLoading && !searchTerm && hasBeenFocused && (
+          <div className={styles.dropdownItem}>
+            Нет доступных городов
+          </div>
+        )}
+      </div>
     </div>
   )
 }
