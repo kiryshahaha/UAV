@@ -512,45 +512,186 @@ def get_flight_points(db: Session = Depends(get_db)):
     
 
 @app.get("/flights/{flight_id}")
-def get_flight(flight_id: int, db: Session = Depends(get_db)):
-    result = db.execute(text("SELECT * FROM excel_data_result_1 WHERE id = :fid"), {"fid": flight_id})
-    row = result.fetchone()
-    if not row:
-        raise HTTPException(status_code=404, detail="Flight not found")
+async def get_flight_zone(
+    flight_id: int = Path(..., description="ID полета"),
+    db: Session = Depends(get_db)
+):
+    """Возвращает данные о зоне полета дрона"""
+    try:
+        # Ищем правильные имена колонок
+        radius_column = _find_column_case_insensitive(db, TARGET_TABLE, [
+            "flight_zone_radius", "FLIGHT_ZONE_RADIUS", "radius", "радиус", "flight_zone_radi"
+        ])
+        
+        zone_column = _find_column_case_insensitive(db, TARGET_TABLE, [
+            "flight_zone", "FLIGHT_ZONE", "zone", "зона"
+        ])
+        
+        # Получаем данные полета
+        result = db.execute(
+            text("SELECT * FROM excel_data_result_1 WHERE id = :flight_id"),
+            {"flight_id": flight_id}
+        )
+        flight_data = result.fetchone()
+        
+        if not flight_data:
+            raise HTTPException(status_code=404, detail="Полет не найден")
+        
+        # Преобразуем в словарь
+        columns = result.keys()
+        flight_dict = dict(zip(columns, flight_data))
+        
+        # Парсим координаты взлета и приземления
+        dep_coords = parse_coord(flight_dict.get("dep_1", ""))
+        dest_coords = parse_coord(flight_dict.get("dest", ""))
+        
+        # Определяем, совпадают ли точки взлета и приземления
+        takeoff_point = {
+            "raw": flight_dict.get("dep_1"),
+            "latitude": dep_coords[0],
+            "longitude": dep_coords[1]
+        }
+        
+        landing_point = {
+            "raw": flight_dict.get("dest"), 
+            "latitude": dest_coords[0],
+            "longitude": dest_coords[1]
+        }
+        
+        points_match = (
+            dep_coords[0] == dest_coords[0] and 
+            dep_coords[1] == dest_coords[1] and
+            flight_dict.get("dep_1") == flight_dict.get("dest")
+        )
+        
+        # Получаем время с проверкой на None
+        departure_time = flight_dict.get("departure_time") or ""
+        arrival_time = flight_dict.get("arrival_time") or ""
+        
+        # Формируем ответ
+        response_data = {
+            "flight_id": flight_id,
+            "flight_zone": flight_dict.get(zone_column) if zone_column else None,
+            "flight_zone_radius": flight_dict.get(radius_column) if radius_column else None,
+            "takeoff_point": takeoff_point,
+            "landing_point": landing_point if not points_match else None,
+            "flight_time": {
+                "departure_time": departure_time,
+                "arrival_time": arrival_time,
+                "duration_minutes": parse_flight_duration(departure_time, arrival_time)
+            },
+            "registration_number": flight_dict.get("reg"),
+            "date_of_flight": flight_dict.get("dof"),
+            "operator": flight_dict.get("opr"),
+            "additional_info": {
+                "flight_level": flight_dict.get("flight_level"),
+                "aircraft_type": flight_dict.get("typ"),
+                "remarks": flight_dict.get("rmk")
+            }
+        }
+        
+        return response_data
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Ошибка в /flights/{flight_id}/flight_zone: {e}")
+        raise HTTPException(status_code=500, detail=f"Ошибка при получении данных о зоне полета: {str(e)}")
+        
+@app.get("/stats/regions/monthly")
+async def get_regions_monthly_stats(db: Session = Depends(get_db)):
+    """Возвращает количество полетов для каждого региона по месяцам"""
+    try:
+        # Ищем колонку с датой полета
+        date_column = _find_column_case_insensitive(db, TARGET_TABLE, [
+            "dof", "DOF", "date_of_flight", "date", "дата"
+        ])
+        
+        # Ищем колонку с регионом (центром ЕС ОРВД)
+        region_column = _find_column_case_insensitive(db, TARGET_TABLE, [
+            "tsentr_es_orvd", "TSENTR_ES_ORVD", "центр", "center", "region"
+        ])
 
-    colnames = result.keys()
-    record = dict(zip(colnames, row))
+        if not date_column or not region_column:
+            raise HTTPException(
+                status_code=400,
+                detail="Не найдены необходимые колонки для анализа (дата и регион)"
+            )
 
-    dep_lat, dep_lon = parse_coord(record.get("dep_1", ""))
-    arr_lat, arr_lon = parse_coord(record.get("dest", ""))
+        # Запрос для группировки по регионам и месяцам
+        query = text(f"""
+            SELECT 
+                "{region_column}" as region,
+                EXTRACT(YEAR FROM TO_DATE("{date_column}", 'DDMMYY')) as year,
+                EXTRACT(MONTH FROM TO_DATE("{date_column}", 'DDMMYY')) as month,
+                COUNT(*) as flight_count
+            FROM {TARGET_TABLE}
+            WHERE "{date_column}" IS NOT NULL 
+            AND "{date_column}" != ''
+            AND "{region_column}" IS NOT NULL
+            AND "{region_column}" != ''
+            GROUP BY "{region_column}", year, month
+            ORDER BY "{region_column}", year, month
+        """)
 
-    return {
-        "id": record["id"],
-        "region": record.get("tsentr_es_orvd"),
-        "departure": {
-            "raw": record.get("dep_1"),
-            "lat": dep_lat,
-            "lon": dep_lon,
-            "time": record.get("departure_time"),
-        },
-        "arrival": {
-            "raw": record.get("dest"),
-            "lat": arr_lat,
-            "lon": arr_lon,
-            "time": record.get("arrival_time"),
-        },
-        "type": record.get("typ"),
-        "reg_number": record.get("reg"),
-        "operator": record.get("opr"),
-        "remarks": record.get("rmk"),
-        "flight_level": record.get("flight_level"),
-        "flight_zone": record.get("flight_zone"),
-        "flight_zone_radius": record.get("flight_zone_radius"),
-        "dof": record.get("dof"),
-        "sts": record.get("sts"),
-        "source_sheet": record.get("source_sheet")
-    }
+        result = db.execute(query)
+        stats_data = result.fetchall()
 
+        # Словарь названий месяцев
+        month_names = {
+            1: "Январь", 2: "Февраль", 3: "Март", 4: "Апрель",
+            5: "Май", 6: "Июнь", 7: "Июль", 8: "Август", 
+            9: "Сентябрь", 10: "Октябрь", 11: "Ноябрь", 12: "Декабрь"
+        }
+
+        # Форматируем данные в удобную структуру
+        formatted_data = {}
+        
+        for row in stats_data:
+            region = row[0]
+            year = int(row[1]) if row[1] else None
+            month = int(row[2]) if row[2] else None
+            count = row[3]
+            
+            if region and year and month:
+                if region not in formatted_data:
+                    formatted_data[region] = {}
+                
+                year_key = str(year)
+                if year_key not in formatted_data[region]:
+                    formatted_data[region][year_key] = {}
+                
+                month_name = month_names.get(month, f"Месяц {month}")
+                formatted_data[region][year_key][month_name] = count
+
+        # Добавляем все месяцы с нулевыми значениями для полноты данных
+        current_year = datetime.now().year
+        current_month = datetime.now().month
+        
+        for region in formatted_data:
+            for year in formatted_data[region]:
+                year_int = int(year)
+                # Для текущего года показываем только прошедшие месяцы
+                # Для прошлых лет показываем все 12 месяцев
+                max_month = current_month if year_int == current_year else 12
+                
+                for month_num in range(1, max_month + 1):
+                    month_name = month_names[month_num]
+                    if month_name not in formatted_data[region][year]:
+                        formatted_data[region][year][month_name] = 0
+
+        return {
+            "stats": formatted_data,
+            "total_regions": len(formatted_data),
+            "columns_used": {
+                "date_column": date_column,
+                "region_column": region_column
+            }
+        }
+
+    except Exception as e:
+        logger.error(f"Ошибка в /stats/regions/monthly: {e}")
+        raise HTTPException(status_code=500, detail=f"Ошибка при получении статистики по регионам: {str(e)}")        
 
 @app.post("/api/upload")
 async def upload_file(file: UploadFile = File(...), db: Session = Depends(get_db)):
