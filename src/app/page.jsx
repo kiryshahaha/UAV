@@ -1,9 +1,9 @@
 "use client";
 import Image from "next/image";
 import styles from "./page.module.css";
-import LeftSearchBar from "@/components/leftSearchBar/LeftSearchBar";
 import Map from "@/components/map/Map";
 import Icons from "@/components/IconsContainer/Icons";
+import Search from "@/components/search/Search";
 import PlusMinus from "@/components/plusminus/PlusMinus";
 import { useRef } from "react";
 import ResetButton from "@/components/resetButton/ResetButton";
@@ -22,9 +22,13 @@ export default function Home() {
       {/* Второй уровень - поиск и иконки */}
       <div className={styles.overlayContent}>
         <div className={styles.LeftSearchBar}>
-          <LeftSearchBar mapRef={mapRef} />
+          <div className={styles.searchFilter}>
+          <Search />
           <Filter />
+          </div>
+          <div>
           <ResetButton mapRef={mapRef}></ResetButton>
+          </div>
         </div>
         <div className={styles.iconsContainer}>
           <div className={styles.icons}>

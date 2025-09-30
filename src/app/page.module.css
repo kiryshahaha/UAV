@@ -49,6 +49,16 @@
     border-radius: 12px;
     margin: 0; /* Убираем марджин, т.к. паддинг уже в overlayContent */
     height: 48px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+
+}
+
+.searchFilter{
+  display: flex;
+  flex-direction: row;  
+      gap: 24px;
 }
 
 .iconsContainer{

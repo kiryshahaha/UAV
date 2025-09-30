@@ -9,7 +9,8 @@
     width: 100%; /* Занимает всё доступное пространство */
     box-sizing: border-box; 
     height: 48px;
-    /* flex: 1; Добавляем это свойство */
+    width: 312px; /* Фиксированная ширина для десктопа */
+    flex-shrink: 0;
 }
 
 .searchInput{
