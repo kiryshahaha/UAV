@@ -8,7 +8,9 @@
     background-color: var(--bg-color);
     width: 100%; /* Занимает всё доступное пространство */
     box-sizing: border-box; 
-    flex: 1; /* Добавляем это свойство */
+    height: 48px;
+    width: 312px; /* Фиксированная ширина для десктопа */
+    flex-shrink: 0;
 }
 
 .searchInput{
