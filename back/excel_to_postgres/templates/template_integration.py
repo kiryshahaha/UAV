@@ -5,9 +5,9 @@ from typing import Dict, List, Optional, Any
 from dotenv import load_dotenv
 import json
 from config.database import DatabaseConfig
-from parsers.excel_parser import ExcelParser
-from parsers.data_processor import DataProcessor
-from loaders.postgres_loader import PostgresLoader
+from back.app.excel_parser import ExcelParser
+from back.app.data_processor import DataProcessor
+from back.app.postgres_loader import PostgresLoader
 from templates.aviation_templates import AviationTemplateProcessor, create_aviation_table_name, get_aviation_table_schema
 
 load_dotenv()

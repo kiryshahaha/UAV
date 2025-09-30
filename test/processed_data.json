@@ -1,0 +1,21 @@
+[
+  {
+    "id": 1,
+    "source_sheet": "Sheet1",
+    "shr": "",
+    "dof": null,
+    "sid": null,
+    "reg": null,
+    "typ": null,
+    "opr": null,
+    "sts": null,
+    "rmk": null,
+    "eet": null,
+    "departure_time": null,
+    "arrival_time": null,
+    "dep_coord": null,
+    "dest_coord": null,
+    "zone": null,
+    "operator_phones": []
+  }
+]

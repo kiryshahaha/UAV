@@ -2,9 +2,9 @@ import os
 import pandas as pd
 from dotenv import load_dotenv
 from config.database import DatabaseConfig
-from parsers.excel_parser import ExcelParser
-from parsers.data_processor import DataProcessor
-from loaders.postgres_loader import PostgresLoader
+from back.app.excel_parser import ExcelParser
+from back.app.data_processor import DataProcessor
+from back.app.postgres_loader import PostgresLoader
 
 def main():
     """Основная функция с автоматическим выбором режима обработки"""
