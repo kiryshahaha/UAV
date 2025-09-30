@@ -75,7 +75,7 @@ const Map = forwardRef((props, ref) => {
 
   const CONFIG = {
     center: [55.7522, 37.6156],
-    zoom: 5,
+    zoom: 6,
     minZoom: 2,
     maxZoom: 18,
     ZoomControl: false,
@@ -85,12 +85,12 @@ const Map = forwardRef((props, ref) => {
       weight: 2,
       fillOpacity: 0.3,
     },
-    hoverStyle: { fillColor: "#aeff3444" },
+    hoverStyle: { fillColor: "#ff343444" },
   };
 
   const onEachRegion = (feature, layer) => {
     if (feature.properties?.REGION_NAME)
-      layer.bindPopup(feature.properties.REGION_NAME);
+      layer.bindPopup(`Регион|область: ${feature.properties.REGION_NAME}`);
     layer.on({
       mouseover: () => layer.setStyle(CONFIG.hoverStyle),
       mouseout: () => layer.setStyle(CONFIG.regionStyle),
