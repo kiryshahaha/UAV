@@ -101,7 +101,6 @@ const Map = forwardRef((props, ref) => {
     });
   };
 
-  // Добавляем метод для смены подложки
   React.useImperativeHandle(ref, () => ({
     changeTileLayer: (newUrl) => {
       if (onTileUrlChange) {
@@ -117,7 +116,28 @@ const Map = forwardRef((props, ref) => {
       if (mapRef.current && cityData.lat && cityData.lon) {
         mapRef.current.setView([cityData.lat, cityData.lon], 12);
       }
-    }
+    },
+    zoomIn: () => {
+      if (mapRef.current) {
+        mapRef.current.zoomIn();
+      }
+    },
+    zoomOut: () => {
+      if (mapRef.current) {
+        mapRef.current.zoomOut();
+      }
+    },
+    getMap: () => mapRef.current,
+    flyTo: (center, zoom) => {
+      if (mapRef.current) {
+        mapRef.current.flyTo(center, zoom);
+      }
+    },
+    setView: (center, zoom) => {
+      if (mapRef.current) {
+        mapRef.current.setView(center, zoom);
+      }
+    },
   }));
 
   return (
