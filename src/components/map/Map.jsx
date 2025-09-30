@@ -1,36 +1,42 @@
 "use client";
 
-import React, { useRef, useMemo, forwardRef } from "react";
+import React, { useRef, useMemo, forwardRef, useState, useEffect } from "react";
 import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
-import L from "leaflet";
 
 import regionData from "public/geoData/RussiaWhole.json";
 import droneData from "public/data/processed_data.json";
 import styles from "./map.module.css";
 
 import {
+  Tooltip,
   MapContainer,
   TileLayer,
   GeoJSON,
   Marker,
-  Popup,
   MarkerClusterGroup,
 } from "@/components/leaflet/leaFletNoSSR.js";
-
-// Иконка дрона через твой SVG
-const droneIcon = new L.Icon({
-  iconUrl: "/svg/drone.svg",
-  iconSize: [24, 24],
-  iconAnchor: [12, 12],
-  popupAnchor: [0, -12],
-  className: "drone-icon",
-});
 
 const Map = forwardRef((props, ref) => {
   const mapRef = useRef(null);
   const markerClusterRef = useRef(null);
+
+  const [droneIcon, setDroneIcon] = useState(null);
+
+  useEffect(() => {
+    import("leaflet").then((L) => {
+      setDroneIcon(
+        new L.Icon({
+          iconUrl: "/svg/drone.svg",
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
+          popupAnchor: [0, -12],
+          className: "drone-icon",
+        })
+      );
+    });
+  }, []);
 
   const CONFIG = {
     center: [55.7522, 37.6156],
@@ -51,10 +57,8 @@ const Map = forwardRef((props, ref) => {
     () =>
       droneData
         .map((d) => {
-          const coords = d.dep_coord ||
-            d.coordinates?.[0] || { latitude: 0, longitude: 0 };
-          if (!coords || coords.latitude === 0 || coords.longitude === 0)
-            return null;
+          const coords = d.dep_coord || d.coordinates?.[0] || { latitude: 0, longitude: 0 };
+          if (!coords || coords.latitude === 0 || coords.longitude === 0) return null;
           return { id: d.id, lat: coords.latitude, lng: coords.longitude };
         })
         .filter(Boolean),
@@ -62,8 +66,7 @@ const Map = forwardRef((props, ref) => {
   );
 
   const onEachRegion = (feature, layer) => {
-    if (feature.properties?.REGION_NAME)
-      layer.bindPopup(feature.properties.REGION_NAME);
+    if (feature.properties?.REGION_NAME) layer.bindPopup(feature.properties.REGION_NAME);
     layer.on({
       mouseover: () => layer.setStyle(CONFIG.hoverStyle),
       mouseout: () => layer.setStyle(CONFIG.regionStyle),
@@ -74,6 +77,7 @@ const Map = forwardRef((props, ref) => {
         }),
     });
   };
+
 
   return (
     <MapContainer
@@ -101,11 +105,7 @@ const Map = forwardRef((props, ref) => {
         attribution="&copy; OpenStreetMap contributors"
       />
 
-      <GeoJSON
-        data={regionData}
-        style={CONFIG.regionStyle}
-        onEachFeature={onEachRegion}
-      />
+      <GeoJSON data={regionData} style={CONFIG.regionStyle} onEachFeature={onEachRegion} />
 
       <MarkerClusterGroup
         ref={markerClusterRef}
@@ -118,7 +118,11 @@ const Map = forwardRef((props, ref) => {
         spiderLegPolylineOptions={{ weight: 1.5, color: "#222", opacity: 0.5 }}
       >
         {processedDrones.map((d) => (
-          <Marker key={d.id} position={[d.lat, d.lng]} icon={droneIcon} />
+          <Marker key={d.id} position={[d.lat, d.lng]} icon={droneIcon}>
+            <Tooltip direction="top" offset={[0, -10]} opacity={1} permanent={false}>
+              ID: {d.id}
+            </Tooltip>
+          </Marker>
         ))}
       </MarkerClusterGroup>
     </MapContainer>

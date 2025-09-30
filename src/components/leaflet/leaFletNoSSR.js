@@ -28,3 +28,10 @@ export const MarkerClusterGroup = dynamic(
   () => import("react-leaflet-markercluster").then((mod) => mod.default),
   { ssr: false }
 );
+
+export const L = typeof window !== "undefined" ? require("leaflet") : null;
+
+export const Tooltip = dynamic(
+  () => import("react-leaflet").then((mod) => mod.Tooltip),
+  { ssr: false }
+);
