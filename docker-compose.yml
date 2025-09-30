@@ -18,6 +18,8 @@ services:
       context: .
       dockerfile: Dockerfile.frontend
     container_name: uav_frontend
+    env_file:
+      - .env       # <-- берёт переменные Supabase отсюда
     environment:
       NEXT_PUBLIC_BACKEND_URL: http://backend:8000
     ports:
