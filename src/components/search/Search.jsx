@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
 import styles from './search.module.css'
 import Image from 'next/image'
 
@@ -8,13 +8,12 @@ const Search = ({ onCitySelect }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
   const [hasBeenFocused, setHasBeenFocused] = useState(false)
-  const [allCitiesCache, setAllCitiesCache] = useState([]) // Кэш для всех городов
+  const [allCitiesCache, setAllCitiesCache] = useState([])
   const dropdownRef = useRef(null)
   const inputRef = useRef(null)
 
-  // Загрузка всех городов при фокусе
-  const loadAllCities = async () => {
-    // Если города уже загружены в кэш, используем их
+  // Мемоизируем обработчики
+  const loadAllCities = useCallback(async () => {
     if (allCitiesCache.length > 0) {
       setCities(allCitiesCache)
       if (hasBeenFocused) {
@@ -30,7 +29,7 @@ const Search = ({ onCitySelect }) => {
         const data = await response.json()
         const citiesData = data.cities || []
         setCities(citiesData)
-        setAllCitiesCache(citiesData) // Сохраняем в кэш
+        setAllCitiesCache(citiesData)
         if (hasBeenFocused) {
           setShowDropdown(citiesData.length > 0)
         }
@@ -41,13 +40,59 @@ const Search = ({ onCitySelect }) => {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [allCitiesCache.length, hasBeenFocused])
+
+  const handleCitySelect = useCallback((city) => {
+    setSearchTerm(city)
+    setShowDropdown(false)
+    if (inputRef.current) {
+      inputRef.current.blur()
+    }
+    if (onCitySelect) {
+      onCitySelect(city)
+    }
+  }, [onCitySelect])
+
+  const handleInputChange = useCallback((e) => {
+    setSearchTerm(e.target.value)
+  }, [])
+
+  const handleInputFocus = useCallback(async () => {
+    setHasBeenFocused(true)
+    if (allCitiesCache.length > 0) {
+      setCities(allCitiesCache)
+      setShowDropdown(true)
+    } else {
+      await loadAllCities()
+    }
+  }, [allCitiesCache.length, loadAllCities])
+
+  const handleClearSearch = useCallback(() => {
+    setSearchTerm('')
+    if (allCitiesCache.length > 0) {
+      setCities(allCitiesCache)
+    }
+    setShowDropdown(false)
+    if (onCitySelect) {
+      onCitySelect(null)
+    }
+    if (inputRef.current) {
+      inputRef.current.focus()
+    }
+  }, [allCitiesCache.length, onCitySelect])
+
+  const handleDropdownClick = useCallback((e) => {
+    e.stopPropagation()
+  }, [])
+
+  const handleContainerClick = useCallback((e) => {
+    e.stopPropagation()
+  }, [])
 
   // Поиск городов при изменении текста
   useEffect(() => {
     const searchCities = async () => {
       if (searchTerm.length === 0) {
-        // Если поле пустое, показываем все города из кэша
         if (hasBeenFocused) {
           if (allCitiesCache.length > 0) {
             setCities(allCitiesCache)
@@ -75,9 +120,9 @@ const Search = ({ onCitySelect }) => {
       }
     }
 
-    const timeoutId = setTimeout(searchCities, 500) // Увеличиваем задержку до 500мс
+    const timeoutId = setTimeout(searchCities, 500)
     return () => clearTimeout(timeoutId)
-  }, [searchTerm, hasBeenFocused, allCitiesCache])
+  }, [searchTerm, hasBeenFocused, allCitiesCache, loadAllCities])
 
   // Закрытие dropdown и снятие фокуса при клике вне компонента
   useEffect(() => {
@@ -93,59 +138,6 @@ const Search = ({ onCitySelect }) => {
     document.addEventListener('click', handleClickOutside)
     return () => document.removeEventListener('click', handleClickOutside)
   }, [])
-
-  const handleCitySelect = (city) => {
-    setSearchTerm(city)
-    setShowDropdown(false)
-    if (inputRef.current) {
-      inputRef.current.blur()
-    }
-    if (onCitySelect) {
-      onCitySelect(city)
-    }
-  }
-
-  const handleInputChange = (e) => {
-    setSearchTerm(e.target.value)
-  }
-
-  const handleInputFocus = async () => {
-    setHasBeenFocused(true)
-    // При фокусе используем кэшированные города или загружаем
-    if (allCitiesCache.length > 0) {
-      setCities(allCitiesCache)
-      setShowDropdown(true)
-    } else {
-      await loadAllCities()
-    }
-  }
-
-  const handleInputBlur = () => {
-    // Оставляем пустым, так как обрабатываем через handleClickOutside
-  }
-
-  const handleClearSearch = () => {
-    setSearchTerm('')
-    // После очистки возвращаем все города из кэша
-    if (allCitiesCache.length > 0) {
-      setCities(allCitiesCache)
-    }
-    setShowDropdown(false)
-    if (onCitySelect) {
-      onCitySelect(null)
-    }
-    if (inputRef.current) {
-      inputRef.current.focus()
-    }
-  }
-
-  const handleDropdownClick = (e) => {
-    e.stopPropagation()
-  }
-
-  const handleContainerClick = (e) => {
-    e.stopPropagation()
-  }
 
   return (
     <div 
@@ -166,7 +158,6 @@ const Search = ({ onCitySelect }) => {
           value={searchTerm}
           onChange={handleInputChange}
           onFocus={handleInputFocus}
-          onBlur={handleInputBlur}
           onClick={handleContainerClick}
         />
         {searchTerm && (
@@ -178,9 +169,6 @@ const Search = ({ onCitySelect }) => {
             <Image src='/svg/close.svg' width={16} height={16} alt='clear'/>
           </button>
         )}
-        {/* {isLoading && (
-          <div className={styles.loader}></div>
-        )} */}
       </div>
       
       <div 
@@ -214,4 +202,4 @@ const Search = ({ onCitySelect }) => {
   )
 }
 
-export default Search
+export default React.memo(Search)

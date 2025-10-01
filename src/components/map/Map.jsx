@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, forwardRef, useState, useEffect, useMemo } from "react";
+import React, { useRef, forwardRef, useState, useEffect, useMemo, useCallback } from "react";
 import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
@@ -9,13 +9,15 @@ import regionData from "public/geoData/RussiaWhole.json";
 import styles from "./map.module.css";
 
 import {
-  Tooltip,
   MapContainer,
   TileLayer,
   GeoJSON,
-  Marker,
   MarkerClusterGroup,
 } from "@/components/leaflet/leaFletNoSSR.js";
+
+// Импортируем вынесенные компоненты
+import DronePopup from "./DronePopup";
+import DroneMarker from "./DroneMarker";
 
 const Map = forwardRef((props, ref) => {
   const { tileUrl, onTileUrlChange } = props;
@@ -26,6 +28,26 @@ const Map = forwardRef((props, ref) => {
   const [droneIcon, setDroneIcon] = useState(null);
   const [rawDrones, setRawDrones] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // Состояние для кастомного попапа
+  const [selectedDrone, setSelectedDrone] = useState(null);
+  const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
+
+  // Мемоизируем конфиг
+  const CONFIG = useMemo(() => ({
+    center: [55.7522, 37.6156],
+    zoom: 6,
+    minZoom: 2,
+    maxZoom: 18,
+    ZoomControl: false,
+    regionStyle: {
+      color: "#424d5b3d",
+      fillColor: "#22222204",
+      weight: 2,
+      fillOpacity: 0.3,
+    },
+    hoverStyle: { fillColor: "#ff343444" },
+  }), []);
 
   useEffect(() => {
     import("leaflet").then((L) => {
@@ -72,22 +94,8 @@ const Map = forwardRef((props, ref) => {
       .filter(Boolean);
   }, [rawDrones]);
 
-  const CONFIG = {
-    center: [55.7522, 37.6156],
-    zoom: 6,
-    minZoom: 2,
-    maxZoom: 18,
-    ZoomControl: false,
-    regionStyle: {
-      color: "#424d5b3d",
-      fillColor: "#22222204",
-      weight: 2,
-      fillOpacity: 0.3,
-    },
-    hoverStyle: { fillColor: "#ff343444" },
-  };
-
-  const onEachRegion = (feature, layer) => {
+  // Мемоизируем обработчики
+  const onEachRegion = useCallback((feature, layer) => {
     if (feature.properties?.REGION_NAME)
       layer.bindPopup(`Регион|область: ${feature.properties.REGION_NAME}`);
     layer.on({
@@ -99,7 +107,71 @@ const Map = forwardRef((props, ref) => {
           animate: true,
         }),
     });
-  };
+  }, [CONFIG.hoverStyle, CONFIG.regionStyle]);
+
+  const handleDroneClick = useCallback((drone, event) => {
+    const mapContainer = event.target._map.getContainer();
+    const rect = mapContainer.getBoundingClientRect();
+    
+    const clickX = event.originalEvent.clientX - rect.left;
+    const clickY = event.originalEvent.clientY - rect.top;
+    
+    setPopupPosition({ x: clickX, y: clickY });
+    setSelectedDrone(drone);
+  }, []);
+
+  const handleClosePopup = useCallback(() => {
+    setSelectedDrone(null);
+  }, []);
+
+  // Мемоизируем кластерную группу дронов
+  const droneClusterGroup = useMemo(() => {
+    if (!droneIcon || drones.length === 0) return null;
+
+    return (
+      <MarkerClusterGroup
+        key="drone-cluster"
+        ref={markerClusterRef}
+        chunkedLoading
+        maxClusterRadius={100}
+        spiderfyOnMaxZoom
+        showCoverageOnHover
+        zoomToBoundsOnClick
+        disableClusteringAtZoom={16}
+        spiderLegPolylineOptions={{
+          weight: 1.5,
+          color: "#222",
+          opacity: 0.5,
+        }}
+      >
+        {drones.map((drone) => (
+          <DroneMarker
+            key={drone.id}
+            drone={drone}
+            droneIcon={droneIcon}
+            onDroneClick={handleDroneClick}
+          />
+        ))}
+      </MarkerClusterGroup>
+    );
+  }, [droneIcon, drones, handleDroneClick]);
+
+  // Закрытие попапа при клике на карту
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    const handleMapClick = (e) => {
+      if (!e.originalEvent?.target?.closest?.('.leaflet-marker-icon')) {
+        setSelectedDrone(null);
+      }
+    };
+
+    mapRef.current.on('click', handleMapClick);
+
+    return () => {
+      mapRef.current?.off('click', handleMapClick);
+    };
+  }, []);
 
   React.useImperativeHandle(ref, () => ({
     changeTileLayer: (newUrl) => {
@@ -138,7 +210,7 @@ const Map = forwardRef((props, ref) => {
         mapRef.current.setView(center, zoom);
       }
     },
-  }));
+  }), [CONFIG.center, CONFIG.zoom, onTileUrlChange]);
 
   return (
     <div
@@ -176,36 +248,17 @@ const Map = forwardRef((props, ref) => {
           onEachFeature={onEachRegion}
         />
 
-        {droneIcon && drones.length > 0 && (
-          <MarkerClusterGroup
-            ref={markerClusterRef}
-            chunkedLoading
-            maxClusterRadius={100}
-            spiderfyOnMaxZoom
-            showCoverageOnHover
-            zoomToBoundsOnClick
-            disableClusteringAtZoom={16}
-            spiderLegPolylineOptions={{
-              weight: 1.5,
-              color: "#222",
-              opacity: 0.5,
-            }}
-          >
-            {drones.map((d) => (
-              <Marker key={d.id} position={[d.lat, d.lng]} icon={droneIcon}>
-                <Tooltip
-                  direction="top"
-                  offset={[0, -10]}
-                  opacity={1}
-                  permanent={false}
-                >
-                  ID: {d.id}
-                </Tooltip>
-              </Marker>
-            ))}
-          </MarkerClusterGroup>
-        )}
+        {droneClusterGroup}
+
       </MapContainer>
+
+      {/* Кастомный попап */}
+      <DronePopup 
+        drone={selectedDrone}
+        isVisible={!!selectedDrone}
+        onClose={handleClosePopup}
+        position={popupPosition}
+      />
     </div>
   );
 });
