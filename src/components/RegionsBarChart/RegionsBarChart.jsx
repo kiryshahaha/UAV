@@ -180,7 +180,7 @@ const RegionsBarChart = () => {
       .attr("fill", "currentColor")
       .attr("font-size", "16px")
       .attr("font-weight", "600")
-      .text("Статистика полетов по регионам");
+      // .text("Статистика полетов по регионам");
 
     // Легенда для среднего времени (только если есть данные о времени)
     if (maxDuration > 0) {

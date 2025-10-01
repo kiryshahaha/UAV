@@ -39,7 +39,7 @@
   height: 100%;
   overflow: hidden;
   box-sizing: border-box;
-  margin-left: 8px;
+  margin-left: 8px; /* Отступ для resize handle */
   display: flex;
   flex-direction: column;
 }
@@ -54,6 +54,7 @@
   flex: 1;
   overflow: hidden;
   min-height: 0;
+  width: 100%; /* Убедимся, что контейнер занимает всю ширину */
 }
 
 .header {

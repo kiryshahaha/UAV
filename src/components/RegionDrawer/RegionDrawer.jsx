@@ -1,10 +1,10 @@
-// components/ResizableDrawer.jsx
+// components/RegionDrawer.jsx
 import React,{ useState, useEffect, useCallback, memo } from 'react';
 import { Resizable } from 'react-resizable';
-import styles from './ResizableDrawer.module.css';
-import RegionsBarChart from '../RegionsBarChart/RegionsBarChart';
+import styles from '../resizableDrawer/ResizableDrawer.module.css';
+import RegionBarChart from '../RegionChart/RegionBarChart';
 
-const ResizableDrawer = memo(({ onClose, isOpen }) => {
+const RegionDrawer = memo(({ onClose, isOpen, regionName }) => {
   const [width, setWidth] = useState(0);
   const [isClosing, setIsClosing] = useState(false);
 
@@ -53,7 +53,7 @@ const ResizableDrawer = memo(({ onClose, isOpen }) => {
       >
         <div className={styles.drawerContent}>
           <div className={styles.header}>
-            <h2>Статистика полетов по регионам</h2>
+            <h2>Статистика полетов - {regionName} регион</h2>
             {onClose && (
               <button 
                 className={styles.closeButton}
@@ -65,7 +65,7 @@ const ResizableDrawer = memo(({ onClose, isOpen }) => {
             )}
           </div>
           <div className={styles.chartContainer}>
-            <RegionsBarChart />
+            <RegionBarChart regionName={regionName} />
           </div>
         </div>
       </Resizable>
@@ -73,6 +73,6 @@ const ResizableDrawer = memo(({ onClose, isOpen }) => {
   );
 });
 
-ResizableDrawer.displayName = 'ResizableDrawer';
+RegionDrawer.displayName = 'RegionDrawer';
 
-export default ResizableDrawer;
+export default RegionDrawer;
