@@ -10,8 +10,8 @@ const RegionPopupContent = ({ regionName, onShowStatistics }) => {
   };
 
   return (
-    <div style={{ minWidth: "200px", fontFamily: "Arial, sans-serif" }}>
-      <h4 style={{ margin: "0 0 10px 0", color: "#333" }}>Регион: {regionName}</h4>
+    <div style={{ minWidth: "200px", display: 'flex', flexDirection:'column', justifyContent: 'center', textAlign: 'center' }}>
+      <span style={{ margin: "0 0 10px 0", color: "#333" }}>Регион: {regionName}</span>
       <button 
         onClick={handleShowStatistics}
         style={{
