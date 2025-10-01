@@ -1,36 +1,274 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Сервис для анализа полетов гражданских БПЛА в регионах РФ
 
-## Getting Started
+Веб-приложение для анализа количества и длительности полетов гражданских беспилотных воздушных судов в регионах Российской Федерации на основе данных Росавиации.
 
-First, run the development server:
+## Структура проекта
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### Корневая структура
+```
+├── back/                     # Backend приложение (FastAPI)
+├── src/                      # Frontend приложение (Next.js)
+├── public/                   # Статические файлы фронтенда
+├── reports/                  # Отчеты и аналитика
+├── docker-compose.yml        # Docker компоновка
+├── Dockerfile.frontend       # Docker образ фронтенда
+└── README.md                # Документация
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Backend структура (`/back`)
+```
+back/
+├── app/                     # Основное приложение FastAPI
+│   ├── parsers/            # Парсеры данных
+│   ├── auto_setup.py       # Автонастройка
+│   ├── data_integrator.py  # Интегратор данных
+│   ├── data_processor.py   # Обработчик данных
+│   ├── database.py         # Настройки БД
+│   ├── excel_parser.py     # Парсер Excel файлов
+│   ├── flight_parsers.py   # Парсеры полетов
+│   ├── main.py             # Основной файл FastAPI
+│   ├── models.py           # Модели данных
+│   ├── postgres_loader.py  # Загрузчик в PostgreSQL
+│   └── run_api.py          # Точка входа сервера
+├── excel_to_postgres/      # Утилиты конвертации Excel в PostgreSQL
+│   ├── config/             # Конфигурации
+│   ├── templates/          # Шаблоны
+│   └── main.py
+├── .env                    # Переменные окружения бэкенда
+├── Dockerfile              # Docker образ бэкенда
+└── requirements.txt        # Зависимости Python
+```
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+### Frontend структура (`/src`)
+```
+src/
+├── app/                    # Next.js App Router
+│   ├── api/               # API routes
+│   ├── auth/              # Аутентификация
+│   ├── loading/           # Компоненты загрузки
+│   ├── globals.css        # Глобальные стили
+│   ├── layout.js          # Корневой layout
+│   └── page.jsx           # Главная страница
+├── components/            # React компоненты
+├── lib/                   # Вспомогательные библиотеки
+└── test/                  # Тесты фронтенда
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Функциональность
 
-## Learn More
+### Для обычных пользователей
+- **Поиск по регионам** - интеллектуальный поиск
+- **Визуализация на карте** - отображение дронов с точными координатами запуска
+- **Статистика по регионам** - сравнение количества запусков и времени полетов
+- **Месячная статистика** - анализ активности по месяцам для каждого региона
+- **Смена темы** - переключение между светлой и темной темой
 
-To learn more about Next.js, take a look at the following resources:
+### Для администраторов
+- **Загрузка файлов** - импорт Excel таблиц с данными полетов
+- **Автоматическое отображение** - карта обновляется в зависимости от загруженных данных
+- **Управление регионами** - добавление новых регионов в систему
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Технический стек
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Frontend
+- **Next.js** - фреймворк React
+- **TypeScript** - типизация
+- **Tailwind CSS** - стилизация
+- **React-Leaflet** - карты и визуализация
 
-## Deploy on Vercel
+### Backend
+- **FastAPI** - Python веб-фреймворк
+- **PostgreSQL** - база данных
+- **Pandas** - обработка Excel файлов
+- **SQLAlchemy** - ORM
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+##  API Endpoints
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Основные эндпоинты
+
+| Метод | Эндпоинт | Описание |
+|-------|----------|----------|
+| `GET` | `/` | Главная страница с данными полетов |
+| `GET` | `/statistics` | Полная статистика с пагинацией |
+| `GET` | `/city/{city_name}` | Данные по конкретному городу |
+| `GET` | `/cities` | Список городов для автодополнения |
+| `GET` | `/stats/regions` | Статистика по всем регионам |
+| `GET` | `/stats/region/{region_name}` | Детальная статистика региона |
+| `GET` | `/flights/points` | Точки взлета на карте |
+| `GET` | `/flights/{flight_id}` | Данные о зоне полета |
+| `GET` | `/stats/regions/monthly` | Статистика по месяцам |
+| `POST` | `/api/upload` | Загрузка Excel файлов |
+| `POST` | `/admin/regions` | Добавление нового региона |
+| `GET` | `/health` | Проверка здоровья API |
+
+### Примеры ответов API
+
+**Главная страница:**
+```json
+{
+  "data": [
+    {
+      "reg": "бортовой номер",
+      "opr": "оператор",
+      "typ": "тип ВС",
+      "dep": "аэропорт вылета",
+      "dest": "аэропорт назначения",
+      "flight_zone_radius": "радиус зоны полета",
+      "flight_level": "эшелон/уровень",
+      "departure_time": "время вылета",
+      "arrival_time": "время прибытия"
+    }
+  ],
+  "count": 76902,
+  "columns": ["reg", "opr", "typ", "dep", "dest", "flight_zone_radius", "flight_level", "departure_time", "arrival_time"]
+}
+```
+
+**Статистика по регионам:**
+```json
+[
+  {
+    "region": "Красноярский",
+    "num_flights": 1500,
+    "avg_flight_duration": 45.5
+  }
+]
+```
+
+## Запуск приложения
+
+### Способ 1: Локальный запуск
+
+#### Backend
+```bash
+# Переходим в папку бэкенда
+cd back
+
+# Запуск FastAPI сервера
+python app/run_api.py
+```
+
+#### Frontend
+```bash
+# Установка зависимостей
+npm install
+
+# Запуск в режиме разработки
+npm run dev
+```
+
+### Способ 2: Запуск через Docker
+
+#### Docker Compose
+```yaml
+version: '3.8'
+services:
+  backend:
+    build: ./back
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=aws-1-eu-north-1.pooler.supabase.com
+      - DB_PORT=6543
+      - DB_NAME=postgres
+      - DB_USER=postgres.adrxmxwncvtbvrmqiihb
+      - DB_PASSWORD=Trening0811!
+      - DB_SCHEMA=public
+      - EXCEL_FILE_PATH=/data/2025.xlsx
+      - SHEET_NAME=Москва
+      - TABLE_NAME=excel_data
+      - CHUNK_SIZE=10000
+      - USE_AVIATION_TEMPLATES=false
+      - NEXT_PUBLIC_BACKEND_URL=http://uav-backend:8000
+
+  frontend:
+    build: 
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+```
+
+#### Dockerfile для Frontend
+```dockerfile
+# Используем легкий Node.js образ
+FROM node:20-alpine
+
+# Рабочая директория
+WORKDIR /app
+
+# Копируем package.json и package-lock.json
+COPY package*.json ./
+
+# Устанавливаем зависимости
+RUN npm install
+
+# Копируем весь фронтенд-код
+COPY . .
+
+# Указываем порт для Next.js
+EXPOSE 3000
+
+# Команда запуска
+CMD ["npm", "run", "dev"]
+```
+
+### Переменные окружения
+
+```env
+DB_HOST=aws-1-eu-north-1.pooler.supabase.com
+DB_PORT=6543
+DB_NAME=postgres
+DB_USER=postgres.adrxmxwncvtbvrmqiihb
+DB_PASSWORD=Trening0811!
+DB_SCHEMA=public
+EXCEL_FILE_PATH=C:\Users\USER\Downloads\2025.xlsx
+SHEET_NAME=Москва
+TABLE_NAME=excel_data
+CHUNK_SIZE=10000
+USE_AVIATION_TEMPLATES=false
+NEXT_PUBLIC_BACKEND_URL=http://uav-backend:8000
+```
+
+## Особенности обработки данных
+
+### Парсинг Excel файлов
+- Автоматическое определение полей данных
+- Приведение таблиц к единому формату
+- Обработка больших объемов данных (70.000+ данных)
+- Поддержка авиационных шаблонов данных
+
+### Основные поля данных
+- **Регистрационные данные**: `reg`, `typ`, `opr`
+- **Маршрут**: `dep`, `dest`, `dep_1` (координаты)
+- **Время**: `departure_time`, `arrival_time`, `dof` (дата)
+- **Зона полета**: `flight_zone`, `flight_zone_radius`, `flight_level`
+- **Регион**: `tsentr_es_orvd` (центр ЕС ОРВД)
+
+## Разработка
+
+### Ключевые файлы приложения
+
+**Backend:**
+- `back/app/run_api.py` - Точка входа сервера
+- `back/app/main.py` - Основное FastAPI приложение
+- `back/app/excel_parser.py` - Парсер Excel файлов
+- `back/app/models.py` - Модели данных SQLAlchemy
+
+**Frontend:**
+- `src/app/page.jsx` - Главная страница
+- `src/app/layout.js` - Корневой layout
+- `src/components/` - React компоненты
+
+## Возможности анализа
+
+- **Количественный анализ** - подсчет количества полетов по регионам
+- **Временной анализ** - длительность полетов, сезонные колебания
+- **Географический анализ** - распределение активности по регионам
+- **Сравнительный анализ** - сравнение показателей между регионами
+
+---
+
+*Разработано в рамках хакатона по теме анализа полетной активности гражданских БПЛА в РФ*
