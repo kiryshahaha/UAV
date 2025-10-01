@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import styles from "./Icons.module.css";
 
-const Icons = ({ onBrushClick, user }) => {
+const Icons = ({ onBrushClick, onStatsClick, user }) => { // Добавляем onStatsClick в props
   const [message, setMessage] = useState("");
 
   const handleFileUpload = async (event) => {
@@ -59,12 +59,12 @@ const Icons = ({ onBrushClick, user }) => {
       )}
 
       {/* Статистика */}
-      <div className={styles.icon}>
+      <div className={styles.icon} onClick={() => onStatsClick && onStatsClick()}>
         <div className={styles.imageWrapper}>
           <Image
             src="/svg/stat.svg"
             fill
-            style={{ objectFit: "contain" }}
+            style={{ objectFit: "contain", cursor: "pointer" }}
             alt="stat-icon"
           />
         </div>

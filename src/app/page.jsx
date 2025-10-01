@@ -1,3 +1,4 @@
+// page.jsx
 "use client";
 import { useRef, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
@@ -8,7 +9,8 @@ import Icons from "@/components/IconsContainer/Icons";
 import Search from "@/components/search/Search";
 import PlusMinus from "@/components/plusminus/PlusMinus";
 import ResetButton from "@/components/resetButton/ResetButton";
-import Filter from "@/components/Filter/Filter";
+import ResizableDrawer from "@/components/resizableDrawer/ResizableDrawer";
+import RegionDrawer from "@/components/RegionDrawer/RegionDrawer";
 
 export default function Home() {
   const mapRef = useRef(null);
@@ -21,6 +23,37 @@ export default function Home() {
   );
   const [isDarkTheme, setIsDarkTheme] = useState(false);
   const [logoutLoading, setLogoutLoading] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isDrawerClosing, setIsDrawerClosing] = useState(false);
+  const [selectedRegion, setSelectedRegion] = useState(null);
+  const [isRegionDrawerOpen, setIsRegionDrawerOpen] = useState(false);
+  const [isRegionDrawerClosing, setIsRegionDrawerClosing] = useState(false);
+
+  // Обработчик для показа статистики региона
+  const handleShowRegionStatistics = useCallback((regionName) => {
+    if (!regionName) {
+      console.error("regionName не определен");
+      return;
+    }
+    console.log("Открытие RegionDrawer для региона:", regionName);
+    setSelectedRegion(regionName);
+    setIsRegionDrawerOpen(true);
+  }, []);
+
+// Обработчик закрытия RegionDrawer
+  const handleCloseRegionDrawer = useCallback(() => {
+    setIsRegionDrawerClosing(true);
+    setTimeout(() => {
+      setIsRegionDrawerOpen(false);
+      setIsRegionDrawerClosing(false);
+      setSelectedRegion(null);
+    }, 300); // Длительность анимации совпадает с CSS
+  }, []);
+
+  // Обработчик клика по оверлею для RegionDrawer
+  const handleRegionOverlayClick = useCallback(() => {
+    handleCloseRegionDrawer();
+  }, [handleCloseRegionDrawer]);
 
   // Мемоизируем обработчики
   const handleTileUrlChange = useCallback((newUrl) => {
@@ -135,6 +168,32 @@ export default function Home() {
     return () => subscription.unsubscribe();
   }, [checkUser, getUserData, router]);
 
+  const handleStatsClick = useCallback(() => {
+    if (isDrawerOpen) {
+      setIsDrawerClosing(true);
+      setTimeout(() => {
+        setIsDrawerOpen(false);
+        setIsDrawerClosing(false);
+      }, 300);
+    } else {
+      setIsDrawerOpen(true);
+    }
+  }, [isDrawerOpen]);
+
+  // Обработчик закрытия drawer
+  const handleCloseDrawer = useCallback(() => {
+    setIsDrawerClosing(true);
+    setTimeout(() => {
+      setIsDrawerOpen(false);
+      setIsDrawerClosing(false);
+    }, 300);
+  }, []);
+
+  // Обработчик клика по оверлею
+  const handleOverlayClick = useCallback(() => {
+    handleCloseDrawer();
+  }, [handleCloseDrawer]);
+
   if (loading) {
     return (
       <div className={styles.container}>
@@ -157,6 +216,7 @@ export default function Home() {
           selectedCity={selectedCity}
           tileUrl={tileUrl}
           onTileUrlChange={handleTileUrlChange}
+          onShowRegionStatistics={handleShowRegionStatistics}
         />
       </div>
 
@@ -165,7 +225,7 @@ export default function Home() {
         <div className={styles.LeftSearchBar}>
           <div className={styles.searchFilter}>
             <Search onCitySelect={handleCitySelect} />
-            <Filter />
+            {/* <Filter /> */}
           </div>
 
           <div className={styles.userPanel}>
@@ -189,6 +249,7 @@ export default function Home() {
                   mapRef.current.changeTileLayer(newUrl);
                 }
               }}
+              onStatsClick={handleStatsClick}
               user={user}
             />
           </div>
@@ -202,6 +263,34 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {(isDrawerOpen || isDrawerClosing) && (
+        <>
+          <div
+            className={`${styles.drawerOverlay} ${isDrawerClosing ? styles.fadeOut : ''}`}
+            onClick={handleOverlayClick}
+          />
+          <ResizableDrawer
+            onClose={handleCloseDrawer}
+            isOpen={isDrawerOpen && !isDrawerClosing}
+          />
+        </>
+      )}
+
+      {(isRegionDrawerOpen || isRegionDrawerClosing) && (
+        <>
+          <div
+            className={`${styles.drawerOverlay} ${isRegionDrawerClosing ? styles.fadeOut : ''}`}
+            onClick={handleRegionOverlayClick}
+          />
+          <RegionDrawer
+            onClose={handleCloseRegionDrawer}
+            isOpen={isRegionDrawerOpen && !isRegionDrawerClosing}
+            regionName={selectedRegion}
+          />
+        </>
+      )}
+
       {logoutLoading && (
         <div className={styles.logoutOverlay}>
           <div className={styles.spinner}></div>
