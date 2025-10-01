@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import styles from "./page.module.css";
@@ -20,44 +20,53 @@ export default function Home() {
   const [isDarkTheme, setIsDarkTheme] = useState(false);
   const [logoutLoading, setLogoutLoading] = useState(false);
 
-  const handleTileUrlChange = (newUrl) => {
+  // Мемоизируем обработчики
+  const handleTileUrlChange = useCallback((newUrl) => {
     setTileUrl(newUrl);
-
-    // Определяем тему на основе URL тайлов
     const isDark = newUrl.includes("dark");
     setIsDarkTheme(isDark);
-  };
+  }, []);
 
-  useEffect(() => {
-    if (isDarkTheme) {
-      document.body.setAttribute('data-theme', 'dark');
-    } else {
-      document.body.removeAttribute('data-theme');
-    }
-  }, [isDarkTheme]);
+  const handleCitySelect = useCallback(async (cityName) => {
+    setSelectedCity(cityName);
 
-  // Проверяем аутентификацию при загрузке
-  useEffect(() => {
-    checkUser();
-
-    // Слушаем изменения аутентификации
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_IN" && session) {
-        await getUserData(session.user);
-      } else if (event === "SIGNED_OUT") {
-        setUser(null);
-        localStorage.removeItem("user");
-        localStorage.removeItem("supabase_token");
-        router.push("/auth");
+    if (cityName === null) {
+      console.log("Поиск очищен");
+      if (mapRef.current?.resetMap) {
+        mapRef.current.resetMap();
       }
-    });
+      return;
+    }
 
-    return () => subscription.unsubscribe();
-  }, [router]);
+    try {
+      const response = await fetch(
+        `http://localhost:8000/city/${encodeURIComponent(cityName)}`
+      );
+      if (response.ok) {
+        const cityData = await response.json();
+        console.log("Данные города:", cityData);
 
-  const checkUser = async () => {
+        if (mapRef.current?.updateCityData) {
+          mapRef.current.updateCityData(cityData);
+        }
+      }
+    } catch (error) {
+      console.error("Ошибка загрузки данных города:", error);
+    }
+  }, []);
+
+  const handleLogout = useCallback(async () => {
+    setLogoutLoading(true);
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error("Ошибка при выходе:", error);
+      setLogoutLoading(false);
+    }
+  }, []);
+
+  // Выносим стабильные функции из useEffect
+  const checkUser = useCallback(async () => {
     try {
       const {
         data: { session },
@@ -79,9 +88,9 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
 
-  const getUserData = async (userData) => {
+  const getUserData = useCallback(async (userData) => {
     try {
       const userInfo = {
         id: userData.id,
@@ -95,47 +104,34 @@ export default function Home() {
     } catch (error) {
       console.error("Error getting user data:", error);
     }
-  };
+  }, []);
 
-  const handleCitySelect = async (cityName) => {
-    setSelectedCity(cityName);
+  useEffect(() => {
+    if (isDarkTheme) {
+      document.body.setAttribute('data-theme', 'dark');
+    } else {
+      document.body.removeAttribute('data-theme');
+    }
+  }, [isDarkTheme]);
 
-    if (cityName === null) {
-      console.log("Поиск очищен");
-      if (mapRef.current && mapRef.current.resetMap) {
-        mapRef.current.resetMap();
+  useEffect(() => {
+    checkUser();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_IN" && session) {
+        await getUserData(session.user);
+      } else if (event === "SIGNED_OUT") {
+        setUser(null);
+        localStorage.removeItem("user");
+        localStorage.removeItem("supabase_token");
+        router.push("/auth");
       }
-      return;
-    }
+    });
 
-    try {
-      const response = await fetch(
-        `http://localhost:8000/city/${encodeURIComponent(cityName)}`
-      );
-      if (response.ok) {
-        const cityData = await response.json();
-        console.log("Данные города:", cityData);
-
-        if (mapRef.current && mapRef.current.updateCityData) {
-          mapRef.current.updateCityData(cityData);
-        }
-      }
-    } catch (error) {
-      console.error("Ошибка загрузки данных города:", error);
-    }
-  };
-
-  const handleLogout = async () => {
-    setLogoutLoading(true); // Включаем индикатор загрузки
-    try {
-      await supabase.auth.signOut();
-      // После успешного выхода, автоматически произойдет переход на /auth
-      // благодаря обработчику onAuthStateChange
-    } catch (error) {
-      console.error("Ошибка при выходе:", error);
-      setLogoutLoading(false); // Выключаем индикатор в случае ошибки
-    }
-  };
+    return () => subscription.unsubscribe();
+  }, [checkUser, getUserData, router]);
 
   if (loading) {
     return (
@@ -161,8 +157,6 @@ export default function Home() {
         />
       </div>
 
-      
-
       {/* Второй уровень - поиск и иконки */}
       <div className={styles.overlayContent}>
         <div className={styles.LeftSearchBar}>
@@ -175,7 +169,7 @@ export default function Home() {
             <button 
               onClick={handleLogout} 
               className={styles.logoutButton}
-              disabled={logoutLoading} // Отключаем кнопку во время загрузки
+              disabled={logoutLoading}
             >
               {logoutLoading ? "Выход..." : "Выйти"}
             </button>
