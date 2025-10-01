@@ -23,6 +23,7 @@ import {
 } from "@/components/leaflet/leaFletNoSSR.js";
 import DronePopup from "./DronePopup";
 import DroneMarker from "./DroneMarker";
+import RegionPopup from "./RegionPopup";
 
 const CONFIG = {
   center: [55.7522, 37.6156],
@@ -104,7 +105,7 @@ function useDrones() {
   return { drones, droneIcon, loading };
 }
 
-function useRegions({ foundRegions, mapRef }) {
+function useRegions({ foundRegions, mapRef, setSelectedRegion }) {
   useEffect(() => {
     if (!foundRegions?.length || !mapRef.current) return;
 
@@ -128,21 +129,18 @@ function useRegions({ foundRegions, mapRef }) {
 
       const center = layer.getBounds().getCenter();
       const regionName = matchedFeatures[0].properties.REGION_NAME;
-      L.popup({ closeButton: true, autoClose: true, className: "region-popup" })
-        .setLatLng(center)
-        .setContent(RegionPopupContent(regionName))
-        .openOn(mapRef.current);
+      
+      // Устанавливаем позицию попапа по центру карты
+      const container = mapRef.current.getContainer();
+      setSelectedRegion({
+        name: regionName,
+        position: {
+          x: container.clientWidth / 2,
+          y: container.clientHeight / 2
+        }
+      });
     }
-  }, [foundRegions, mapRef]);
-}
-
-function RegionPopupContent(regionName) {
-  return `
-    <div style="min-width: 200px; padding: 10px; font-family: Arial, sans-serif;">
-      <h4 style="margin: 0 0 10px 0; color: #333;">Регион: ${regionName}</h4>
-      <button style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px;">Показать статистику</button>
-    </div>
-  `;
+  }, [foundRegions, mapRef, setSelectedRegion]);
 }
 
 const Map = forwardRef((props, ref) => {
@@ -153,25 +151,31 @@ const Map = forwardRef((props, ref) => {
 
   const [selectedDrone, setSelectedDrone] = useState(null);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
+  const [selectedRegion, setSelectedRegion] = useState(null);
 
-  useRegions({ foundRegions, mapRef });
+  useRegions({ foundRegions, mapRef, setSelectedRegion });
 
   const onEachRegion = useCallback((feature, layer) => {
-    if (feature.properties?.REGION_NAME) {
-      layer.bindPopup(RegionPopupContent(feature.properties.REGION_NAME), {
-        closeButton: true,
-        autoClose: true,
-        className: "region-popup",
-      });
-    }
+    // Убираем полностью стандартные попапы - не вызываем layer.bindPopup()
+    
     layer.on({
       mouseover: () => layer.setStyle(CONFIG.hoverStyle),
       mouseout: () => layer.setStyle(CONFIG.regionStyle),
-      click: () =>
+      click: (e) => {
+        // Устанавливаем позицию попапа по клику
+        const rect = e.target._map.getContainer().getBoundingClientRect();
+        setSelectedRegion({
+          name: feature.properties.REGION_NAME,
+          position: {
+            x: e.originalEvent.clientX - rect.left,
+            y: e.originalEvent.clientY - rect.top,
+          }
+        });
         mapRef.current?.fitBounds(layer.getBounds(), {
           padding: [50, 50],
           animate: true,
-        }),
+        });
+      },
     });
   }, []);
 
@@ -185,12 +189,19 @@ const Map = forwardRef((props, ref) => {
   }, []);
 
   const handleClosePopup = useCallback(() => setSelectedDrone(null), []);
+  const handleCloseRegionPopup = useCallback(() => setSelectedRegion(null), []);
 
   useEffect(() => {
     if (!mapRef.current) return;
     const handleMapClick = (e) => {
-      if (!e.originalEvent?.target?.closest?.(".leaflet-marker-icon"))
+      // Закрываем попап дрона если кликнули не по маркеру
+      if (!e.originalEvent?.target?.closest?.(".leaflet-marker-icon")) {
         setSelectedDrone(null);
+      }
+      // Закрываем попап региона если кликнули не по региону
+      if (!e.originalEvent?.target?.closest?.(".leaflet-interactive")) {
+        setSelectedRegion(null);
+      }
     };
     mapRef.current.on("click", handleMapClick);
     return () => mapRef.current?.off("click", handleMapClick);
@@ -265,6 +276,12 @@ const Map = forwardRef((props, ref) => {
         isVisible={!!selectedDrone}
         onClose={handleClosePopup}
         position={popupPosition}
+      />
+      <RegionPopup
+        regionName={selectedRegion?.name}
+        isVisible={!!selectedRegion}
+        onClose={handleCloseRegionPopup}
+        position={selectedRegion?.position}
       />
     </div>
   );

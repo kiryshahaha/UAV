@@ -1,9 +1,10 @@
 "use client";
 
 import React from "react";
+import RegionPopupContent from "./RegionPopupContent";
 
-const DronePopup = ({ drone, isVisible, onClose, position }) => {
-  if (!isVisible || !drone) return null;
+const RegionPopup = ({ regionName, isVisible, onClose, position }) => {
+  if (!isVisible || !regionName) return null;
 
   return (
     <div style={{
@@ -20,7 +21,7 @@ const DronePopup = ({ drone, isVisible, onClose, position }) => {
       border: "1px solid #e0e0e0"
     }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-        <h3 style={{ margin: 0, fontSize: "16px", color: "#333" }}>Информация о дроне</h3>
+        <h3 style={{ margin: 0, fontSize: "16px", color: "#333" }}>Информация о регионе</h3>
         <button 
           onClick={onClose}
           style={{
@@ -34,19 +35,9 @@ const DronePopup = ({ drone, isVisible, onClose, position }) => {
           ×
         </button>
       </div>
-      
-      <div style={{ marginBottom: "16px" }}>
-        <p style={{ margin: "4px 0", fontSize: "14px" }}><strong>ID:</strong> {drone.id}</p>
-        <p style={{ margin: "4px 0", fontSize: "14px" }}><strong>Координаты:</strong></p>
-        <p style={{ margin: "4px 0", fontSize: "12px", color: "#666" }}>
-          Широта: {drone.lat.toFixed(6)}
-        </p>
-        <p style={{ margin: "4px 0", fontSize: "12px", color: "#666" }}>
-          Долгота: {drone.lng.toFixed(6)}
-        </p>
-      </div>
+      <RegionPopupContent regionName={regionName} />
     </div>
   );
 };
 
-export default React.memo(DronePopup);
+export default React.memo(RegionPopup);
