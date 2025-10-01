@@ -16,7 +16,9 @@ export default function Home() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const [tileUrl, setTileUrl] = useState("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png");
+  const [tileUrl, setTileUrl] = useState(
+    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+  );
   const [isDarkTheme, setIsDarkTheme] = useState(false);
   const [logoutLoading, setLogoutLoading] = useState(false);
 
@@ -108,9 +110,9 @@ export default function Home() {
 
   useEffect(() => {
     if (isDarkTheme) {
-      document.body.setAttribute('data-theme', 'dark');
+      document.body.setAttribute("data-theme", "dark");
     } else {
-      document.body.removeAttribute('data-theme');
+      document.body.removeAttribute("data-theme");
     }
   }, [isDarkTheme]);
 
@@ -149,8 +151,9 @@ export default function Home() {
     <div className={styles.container}>
       {/* Первый уровень - карта */}
       <div className={styles.Map}>
-        <Map 
-          ref={mapRef} 
+        <Map
+          foundRegions={selectedCity ? [selectedCity] : []}
+          ref={mapRef}
           selectedCity={selectedCity}
           tileUrl={tileUrl}
           onTileUrlChange={handleTileUrlChange}
@@ -166,8 +169,8 @@ export default function Home() {
           </div>
 
           <div className={styles.userPanel}>
-            <button 
-              onClick={handleLogout} 
+            <button
+              onClick={handleLogout}
               className={styles.logoutButton}
               disabled={logoutLoading}
             >

@@ -1,6 +1,13 @@
 "use client";
 
-import React, { useRef, forwardRef, useState, useEffect, useMemo, useCallback } from "react";
+import React, {
+  useRef,
+  forwardRef,
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+} from "react";
 import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
@@ -14,40 +21,41 @@ import {
   GeoJSON,
   MarkerClusterGroup,
 } from "@/components/leaflet/leaFletNoSSR.js";
-
-// Импортируем вынесенные компоненты
 import DronePopup from "./DronePopup";
 import DroneMarker from "./DroneMarker";
 
-const Map = forwardRef((props, ref) => {
-  const { tileUrl, onTileUrlChange } = props;
+const CONFIG = {
+  center: [55.7522, 37.6156],
+  zoom: 6,
+  minZoom: 2,
+  maxZoom: 18,
+  ZoomControl: false,
+  regionStyle: {
+    color: "#424d5b3d",
+    fillColor: "#22222204",
+    weight: 2,
+    fillOpacity: 0.3,
+  },
+  hoverStyle: { fillColor: "#ff343444" },
+  maxBounds: [
+    [-90, -180],
+    [90, 190],
+  ],
+  clusterOptions: {
+    chunkedLoading: true,
+    maxClusterRadius: 100,
+    spiderfyOnMaxZoom: true,
+    showCoverageOnHover: true,
+    zoomToBoundsOnClick: true,
+    disableClusteringAtZoom: 16,
+    spiderLegPolylineOptions: { weight: 1.5, color: "#222", opacity: 0.5 },
+  },
+};
 
-  const mapRef = useRef(null);
-  const markerClusterRef = useRef(null);
-
-  const [droneIcon, setDroneIcon] = useState(null);
+function useDrones() {
   const [rawDrones, setRawDrones] = useState([]);
   const [loading, setLoading] = useState(true);
-  
-  // Состояние для кастомного попапа
-  const [selectedDrone, setSelectedDrone] = useState(null);
-  const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
-
-  // Мемоизируем конфиг
-  const CONFIG = useMemo(() => ({
-    center: [55.7522, 37.6156],
-    zoom: 6,
-    minZoom: 2,
-    maxZoom: 18,
-    ZoomControl: false,
-    regionStyle: {
-      color: "#424d5b3d",
-      fillColor: "#22222204",
-      weight: 2,
-      fillOpacity: 0.3,
-    },
-    hoverStyle: { fillColor: "#ff343444" },
-  }), []);
+  const [droneIcon, setDroneIcon] = useState(null);
 
   useEffect(() => {
     import("leaflet").then((L) => {
@@ -68,8 +76,7 @@ const Map = forwardRef((props, ref) => {
       try {
         const res = await fetch("http://localhost:8000/flights/points");
         if (!res.ok) throw new Error(`Ошибка: ${res.status}`);
-        const data = await res.json();
-        setRawDrones(data);
+        setRawDrones(await res.json());
       } catch (err) {
         console.error("❌ Ошибка загрузки дронов:", err);
       } finally {
@@ -94,10 +101,69 @@ const Map = forwardRef((props, ref) => {
       .filter(Boolean);
   }, [rawDrones]);
 
-  // Мемоизируем обработчики
+  return { drones, droneIcon, loading };
+}
+
+function useRegions({ foundRegions, mapRef }) {
+  useEffect(() => {
+    if (!foundRegions?.length || !mapRef.current) return;
+
+    const normalize = (str) => str?.toLowerCase().trim();
+    const matchedFeatures = regionData.features.filter((feature) =>
+      foundRegions.some((searchTerm) =>
+        normalize(feature.properties?.REGION_NAME).includes(
+          normalize(searchTerm)
+        )
+      )
+    );
+
+    if (matchedFeatures.length > 0) {
+      const L = require("leaflet");
+      const geoJsonHighlight = {
+        type: "FeatureCollection",
+        features: matchedFeatures,
+      };
+      const layer = new L.GeoJSON(geoJsonHighlight);
+      mapRef.current.fitBounds(layer.getBounds(), { padding: [50, 50] });
+
+      const center = layer.getBounds().getCenter();
+      const regionName = matchedFeatures[0].properties.REGION_NAME;
+      L.popup({ closeButton: true, autoClose: true, className: "region-popup" })
+        .setLatLng(center)
+        .setContent(RegionPopupContent(regionName))
+        .openOn(mapRef.current);
+    }
+  }, [foundRegions, mapRef]);
+}
+
+function RegionPopupContent(regionName) {
+  return `
+    <div style="min-width: 200px; padding: 10px; font-family: Arial, sans-serif;">
+      <h4 style="margin: 0 0 10px 0; color: #333;">Регион: ${regionName}</h4>
+      <button style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px;">Показать статистику</button>
+    </div>
+  `;
+}
+
+const Map = forwardRef((props, ref) => {
+  const { tileUrl, onTileUrlChange, foundRegions = [] } = props;
+  const mapRef = useRef(null);
+  const markerClusterRef = useRef(null);
+  const { drones, droneIcon, loading } = useDrones();
+
+  const [selectedDrone, setSelectedDrone] = useState(null);
+  const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
+
+  useRegions({ foundRegions, mapRef });
+
   const onEachRegion = useCallback((feature, layer) => {
-    if (feature.properties?.REGION_NAME)
-      layer.bindPopup(`Регион|область: ${feature.properties.REGION_NAME}`);
+    if (feature.properties?.REGION_NAME) {
+      layer.bindPopup(RegionPopupContent(feature.properties.REGION_NAME), {
+        closeButton: true,
+        autoClose: true,
+        className: "region-popup",
+      });
+    }
     layer.on({
       mouseover: () => layer.setStyle(CONFIG.hoverStyle),
       mouseout: () => layer.setStyle(CONFIG.regionStyle),
@@ -107,43 +173,33 @@ const Map = forwardRef((props, ref) => {
           animate: true,
         }),
     });
-  }, [CONFIG.hoverStyle, CONFIG.regionStyle]);
+  }, []);
 
   const handleDroneClick = useCallback((drone, event) => {
-    const mapContainer = event.target._map.getContainer();
-    const rect = mapContainer.getBoundingClientRect();
-    
-    const clickX = event.originalEvent.clientX - rect.left;
-    const clickY = event.originalEvent.clientY - rect.top;
-    
-    setPopupPosition({ x: clickX, y: clickY });
+    const rect = event.target._map.getContainer().getBoundingClientRect();
+    setPopupPosition({
+      x: event.originalEvent.clientX - rect.left,
+      y: event.originalEvent.clientY - rect.top,
+    });
     setSelectedDrone(drone);
   }, []);
 
-  const handleClosePopup = useCallback(() => {
-    setSelectedDrone(null);
+  const handleClosePopup = useCallback(() => setSelectedDrone(null), []);
+
+  useEffect(() => {
+    if (!mapRef.current) return;
+    const handleMapClick = (e) => {
+      if (!e.originalEvent?.target?.closest?.(".leaflet-marker-icon"))
+        setSelectedDrone(null);
+    };
+    mapRef.current.on("click", handleMapClick);
+    return () => mapRef.current?.off("click", handleMapClick);
   }, []);
 
-  // Мемоизируем кластерную группу дронов
   const droneClusterGroup = useMemo(() => {
-    if (!droneIcon || drones.length === 0) return null;
-
+    if (!droneIcon || !drones.length || loading) return null;
     return (
-      <MarkerClusterGroup
-        key="drone-cluster"
-        ref={markerClusterRef}
-        chunkedLoading
-        maxClusterRadius={100}
-        spiderfyOnMaxZoom
-        showCoverageOnHover
-        zoomToBoundsOnClick
-        disableClusteringAtZoom={16}
-        spiderLegPolylineOptions={{
-          weight: 1.5,
-          color: "#222",
-          opacity: 0.5,
-        }}
-      >
+      <MarkerClusterGroup ref={markerClusterRef} {...CONFIG.clusterOptions}>
         {drones.map((drone) => (
           <DroneMarker
             key={drone.id}
@@ -154,63 +210,25 @@ const Map = forwardRef((props, ref) => {
         ))}
       </MarkerClusterGroup>
     );
-  }, [droneIcon, drones, handleDroneClick]);
+  }, [droneIcon, drones, handleDroneClick, loading]);
 
-  // Закрытие попапа при клике на карту
-  useEffect(() => {
-    if (!mapRef.current) return;
-
-    const handleMapClick = (e) => {
-      if (!e.originalEvent?.target?.closest?.('.leaflet-marker-icon')) {
-        setSelectedDrone(null);
-      }
-    };
-
-    mapRef.current.on('click', handleMapClick);
-
-    return () => {
-      mapRef.current?.off('click', handleMapClick);
-    };
-  }, []);
-
-  React.useImperativeHandle(ref, () => ({
-    changeTileLayer: (newUrl) => {
-      if (onTileUrlChange) {
-        onTileUrlChange(newUrl);
-      }
-    },
-    resetMap: () => {
-      if (mapRef.current) {
-        mapRef.current.setView(CONFIG.center, CONFIG.zoom);
-      }
-    },
-    updateCityData: (cityData) => {
-      if (mapRef.current && cityData.lat && cityData.lon) {
-        mapRef.current.setView([cityData.lat, cityData.lon], 12);
-      }
-    },
-    zoomIn: () => {
-      if (mapRef.current) {
-        mapRef.current.zoomIn();
-      }
-    },
-    zoomOut: () => {
-      if (mapRef.current) {
-        mapRef.current.zoomOut();
-      }
-    },
-    getMap: () => mapRef.current,
-    flyTo: (center, zoom) => {
-      if (mapRef.current) {
-        mapRef.current.flyTo(center, zoom);
-      }
-    },
-    setView: (center, zoom) => {
-      if (mapRef.current) {
-        mapRef.current.setView(center, zoom);
-      }
-    },
-  }), [CONFIG.center, CONFIG.zoom, onTileUrlChange]);
+  React.useImperativeHandle(
+    ref,
+    () => ({
+      changeTileLayer: (newUrl) => onTileUrlChange?.(newUrl),
+      resetMap: () => mapRef.current?.setView(CONFIG.center, CONFIG.zoom),
+      updateCityData: (cityData) =>
+        cityData.lat &&
+        cityData.lon &&
+        mapRef.current?.setView([cityData.lat, cityData.lon], 12),
+      zoomIn: () => mapRef.current?.zoomIn(),
+      zoomOut: () => mapRef.current?.zoomOut(),
+      getMap: () => mapRef.current,
+      flyTo: (center, zoom) => mapRef.current?.flyTo(center, zoom),
+      setView: (center, zoom) => mapRef.current?.setView(center, zoom),
+    }),
+    [onTileUrlChange]
+  );
 
   return (
     <div
@@ -226,34 +244,23 @@ const Map = forwardRef((props, ref) => {
         className={styles.mapContainer}
         attributionControl={false}
         preferCanvas
-        maxBounds={[
-          [-90, -180],
-          [90, 190],
-        ]}
+        maxBounds={CONFIG.maxBounds}
         maxBoundsViscosity={0.95}
         worldCopyJump={false}
-        ref={(node) => {
-          mapRef.current = node;
-          if (ref) ref.current = node;
-        }}
+        ref={mapRef}
       >
         <TileLayer
           url={tileUrl}
           attribution="&copy; OpenStreetMap contributors"
         />
-
         <GeoJSON
           data={regionData}
           style={CONFIG.regionStyle}
           onEachFeature={onEachRegion}
         />
-
         {droneClusterGroup}
-
       </MapContainer>
-
-      {/* Кастомный попап */}
-      <DronePopup 
+      <DronePopup
         drone={selectedDrone}
         isVisible={!!selectedDrone}
         onClose={handleClosePopup}
