@@ -1,9 +1,10 @@
+// RegionPopup.jsx
 "use client";
 
 import React from "react";
 import RegionPopupContent from "./RegionPopupContent";
 
-const RegionPopup = ({ regionName, isVisible, onClose, position }) => {
+const RegionPopup = ({ regionName, isVisible, onClose, position, onShowStatistics }) => {
   if (!isVisible || !regionName) return null;
 
   return (
@@ -35,7 +36,10 @@ const RegionPopup = ({ regionName, isVisible, onClose, position }) => {
           ×
         </button>
       </div>
-      <RegionPopupContent regionName={regionName} />
+      <RegionPopupContent 
+        regionName={regionName} 
+        onShowStatistics={onShowStatistics}
+      />
     </div>
   );
 };

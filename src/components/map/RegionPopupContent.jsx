@@ -3,10 +3,10 @@
 
 import React from "react";
 
-const RegionPopupContent = ({ regionName }) => {
+const RegionPopupContent = ({ regionName, onShowStatistics }) => {
   const handleShowStatistics = () => {
     console.log(`Показать статистику для региона: ${regionName}`);
-    // Здесь будет логика для показа статистики
+    onShowStatistics?.(regionName);
   };
 
   return (

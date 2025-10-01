@@ -129,7 +129,7 @@ function useRegions({ foundRegions, mapRef, setSelectedRegion }) {
 
       const center = layer.getBounds().getCenter();
       const regionName = matchedFeatures[0].properties.REGION_NAME;
-      
+
       // Устанавливаем позицию попапа по центру карты
       const container = mapRef.current.getContainer();
       setSelectedRegion({
@@ -144,7 +144,7 @@ function useRegions({ foundRegions, mapRef, setSelectedRegion }) {
 }
 
 const Map = forwardRef((props, ref) => {
-  const { tileUrl, onTileUrlChange, foundRegions = [] } = props;
+  const { tileUrl, onTileUrlChange, foundRegions = [], onShowRegionStatistics = [] } = props;
   const mapRef = useRef(null);
   const markerClusterRef = useRef(null);
   const { drones, droneIcon, loading } = useDrones();
@@ -152,12 +152,13 @@ const Map = forwardRef((props, ref) => {
   const [selectedDrone, setSelectedDrone] = useState(null);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
   const [selectedRegion, setSelectedRegion] = useState(null);
+  const [selectedRegionForDrawer, setSelectedRegionForDrawer] = useState(null);
 
   useRegions({ foundRegions, mapRef, setSelectedRegion });
 
   const onEachRegion = useCallback((feature, layer) => {
     // Убираем полностью стандартные попапы - не вызываем layer.bindPopup()
-    
+
     layer.on({
       mouseover: () => layer.setStyle(CONFIG.hoverStyle),
       mouseout: () => layer.setStyle(CONFIG.regionStyle),
@@ -207,6 +208,14 @@ const Map = forwardRef((props, ref) => {
     return () => mapRef.current?.off("click", handleMapClick);
   }, []);
 
+  const handleShowStatistics = useCallback((regionName) => {
+    console.log("Opening drawer for region:", regionName);
+    // Вместо локального состояния вызываем функцию из пропсов
+    onShowRegionStatistics?.(regionName);
+    // Закрываем попап региона
+    setSelectedRegion(null);
+  }, [onShowRegionStatistics]);
+  
   const droneClusterGroup = useMemo(() => {
     if (!droneIcon || !drones.length || loading) return null;
     return (
@@ -282,6 +291,7 @@ const Map = forwardRef((props, ref) => {
         isVisible={!!selectedRegion}
         onClose={handleCloseRegionPopup}
         position={selectedRegion?.position}
+        onShowStatistics={handleShowStatistics}
       />
     </div>
   );

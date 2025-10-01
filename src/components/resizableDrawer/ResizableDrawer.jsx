@@ -1,4 +1,3 @@
-// components/ResizableDrawer.jsx
 import React,{ useState, useEffect, useCallback, memo } from 'react';
 import { Resizable } from 'react-resizable';
 import styles from './ResizableDrawer.module.css';
