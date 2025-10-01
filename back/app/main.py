@@ -618,25 +618,6 @@ async def get_regions_monthly_stats(db: Session = Depends(get_db)):
                 detail="Не найдены необходимые колонки для анализа (дата и регион)"
             )
 
-        # Запрос для группировки по регионам и месяцам
-        query = text(f"""
-            SELECT 
-                "{region_column}" as region,
-                EXTRACT(YEAR FROM TO_DATE("{date_column}", 'DDMMYY')) as year,
-                EXTRACT(MONTH FROM TO_DATE("{date_column}", 'DDMMYY')) as month,
-                COUNT(*) as flight_count
-            FROM {TARGET_TABLE}
-            WHERE "{date_column}" IS NOT NULL 
-            AND "{date_column}" != ''
-            AND "{region_column}" IS NOT NULL
-            AND "{region_column}" != ''
-            GROUP BY "{region_column}", year, month
-            ORDER BY "{region_column}", year, month
-        """)
-
-        result = db.execute(query)
-        stats_data = result.fetchall()
-
         # Словарь названий месяцев
         month_names = {
             1: "Январь", 2: "Февраль", 3: "Март", 4: "Апрель",
@@ -644,45 +625,66 @@ async def get_regions_monthly_stats(db: Session = Depends(get_db)):
             9: "Сентябрь", 10: "Октябрь", 11: "Ноябрь", 12: "Декабрь"
         }
 
+        # Запрос для группировки по регионам и месяцам
+        query = text(f"""
+            SELECT 
+                "{region_column}" as region,
+                EXTRACT(MONTH FROM TO_DATE("{date_column}", 'DDMMYY')) as month,
+                COUNT(*) as flight_count
+            FROM {TARGET_TABLE}
+            WHERE "{date_column}" IS NOT NULL 
+            AND "{date_column}" != ''
+            AND "{region_column}" IS NOT NULL
+            AND "{region_column}" != ''
+            GROUP BY "{region_column}", month
+            ORDER BY "{region_column}", month
+        """)
+
+        result = db.execute(query)
+        stats_data = result.fetchall()
+
         # Форматируем данные в удобную структуру
-        formatted_data = {}
+        regions_stats = {}
         
         for row in stats_data:
             region = row[0]
-            year = int(row[1]) if row[1] else None
-            month = int(row[2]) if row[2] else None
-            count = row[3]
+            month_num = int(row[1]) if row[1] else None
+            count = row[2]
             
-            if region and year and month:
-                if region not in formatted_data:
-                    formatted_data[region] = {}
+            if region and month_num and month_num in month_names:
+                if region not in regions_stats:
+                    regions_stats[region] = {}
                 
-                year_key = str(year)
-                if year_key not in formatted_data[region]:
-                    formatted_data[region][year_key] = {}
-                
-                month_name = month_names.get(month, f"Месяц {month}")
-                formatted_data[region][year_key][month_name] = count
+                month_name = month_names[month_num]
+                regions_stats[region][month_name] = count
 
         # Добавляем все месяцы с нулевыми значениями для полноты данных
-        current_year = datetime.now().year
-        current_month = datetime.now().month
-        
-        for region in formatted_data:
-            for year in formatted_data[region]:
-                year_int = int(year)
-                # Для текущего года показываем только прошедшие месяцы
-                # Для прошлых лет показываем все 12 месяцев
-                max_month = current_month if year_int == current_year else 12
-                
-                for month_num in range(1, max_month + 1):
-                    month_name = month_names[month_num]
-                    if month_name not in formatted_data[region][year]:
-                        formatted_data[region][year][month_name] = 0
+        for region in regions_stats:
+            for month_num, month_name in month_names.items():
+                if month_name not in regions_stats[region]:
+                    regions_stats[region][month_name] = 0
+
+        # Преобразуем в список для удобства фронтенда
+        result_list = []
+        for region_name, months_data in regions_stats.items():
+            region_data = {
+                "region": region_name,
+                "monthly_stats": []
+            }
+            
+            # Собираем статистику по месяцам в правильном порядке
+            for month_num in range(1, 13):
+                month_name = month_names[month_num]
+                region_data["monthly_stats"].append({
+                    "month": month_name,
+                    "flight_count": months_data[month_name]
+                })
+            
+            result_list.append(region_data)
 
         return {
-            "stats": formatted_data,
-            "total_regions": len(formatted_data),
+            "regions": result_list,
+            "total_regions": len(result_list),
             "columns_used": {
                 "date_column": date_column,
                 "region_column": region_column
@@ -691,7 +693,8 @@ async def get_regions_monthly_stats(db: Session = Depends(get_db)):
 
     except Exception as e:
         logger.error(f"Ошибка в /stats/regions/monthly: {e}")
-        raise HTTPException(status_code=500, detail=f"Ошибка при получении статистики по регионам: {str(e)}")        
+        raise HTTPException(status_code=500, detail=f"Ошибка при получении статистики по регионам: {str(e)}")
+
 
 @app.post("/api/upload")
 async def upload_file(file: UploadFile = File(...), db: Session = Depends(get_db)):

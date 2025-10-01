@@ -130,7 +130,7 @@
 
 @media (max-width: 768px) {
   .searchWrapper {
-    width: 75%;
+    width: 100%;
   }
   
   .searchContainer {

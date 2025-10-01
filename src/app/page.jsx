@@ -8,7 +8,7 @@ import Icons from "@/components/IconsContainer/Icons";
 import Search from "@/components/search/Search";
 import PlusMinus from "@/components/plusminus/PlusMinus";
 import ResetButton from "@/components/resetButton/ResetButton";
-import Filter from "@/components/Filter/Filter";
+import ResizableDrawer from "@/components/resizableDrawer/ResizableDrawer";
 
 export default function Home() {
   const mapRef = useRef(null);
@@ -21,6 +21,8 @@ export default function Home() {
   );
   const [isDarkTheme, setIsDarkTheme] = useState(false);
   const [logoutLoading, setLogoutLoading] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isDrawerClosing, setIsDrawerClosing] = useState(false);
 
   // Мемоизируем обработчики
   const handleTileUrlChange = useCallback((newUrl) => {
@@ -135,6 +137,35 @@ export default function Home() {
     return () => subscription.unsubscribe();
   }, [checkUser, getUserData, router]);
 
+  const handleStatsClick = useCallback(() => {
+    if (isDrawerOpen) {
+      // Если drawer открыт, начинаем закрытие
+      setIsDrawerClosing(true);
+      setTimeout(() => {
+        setIsDrawerOpen(false);
+        setIsDrawerClosing(false);
+      }, 300);
+    } else {
+      // Если drawer закрыт, открываем
+      setIsDrawerOpen(true);
+    }
+  }, [isDrawerOpen]);
+
+  // Обработчик закрытия drawer
+  const handleCloseDrawer = useCallback(() => {
+    setIsDrawerClosing(true);
+    setTimeout(() => {
+      setIsDrawerOpen(false);
+      setIsDrawerClosing(false);
+    }, 300);
+  }, []);
+
+  // Обработчик клика по оверлею
+  const handleOverlayClick = useCallback(() => {
+    handleCloseDrawer();
+  }, [handleCloseDrawer]);
+
+
   if (loading) {
     return (
       <div className={styles.container}>
@@ -165,7 +196,7 @@ export default function Home() {
         <div className={styles.LeftSearchBar}>
           <div className={styles.searchFilter}>
             <Search onCitySelect={handleCitySelect} />
-            <Filter />
+            {/* <Filter /> */}
           </div>
 
           <div className={styles.userPanel}>
@@ -189,6 +220,7 @@ export default function Home() {
                   mapRef.current.changeTileLayer(newUrl);
                 }
               }}
+              onStatsClick={handleStatsClick}
               user={user}
             />
           </div>
@@ -202,6 +234,20 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {(isDrawerOpen || isDrawerClosing) && (
+        <>
+          <div 
+            className={`${styles.drawerOverlay} ${isDrawerClosing ? styles.fadeOut : ''}`}
+            onClick={handleOverlayClick}
+          />
+          <ResizableDrawer 
+            onClose={handleCloseDrawer}
+            isOpen={isDrawerOpen && !isDrawerClosing}
+          />
+        </>
+      )}
+
       {logoutLoading && (
         <div className={styles.logoutOverlay}>
           <div className={styles.spinner}></div>
