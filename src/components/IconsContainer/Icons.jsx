@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import styles from "./Icons.module.css";
 
-const Icons = ({ onBrushClick }) => {
+const Icons = ({ onBrushClick, user }) => {
   const [message, setMessage] = useState("");
 
   const handleFileUpload = async (event) => {
@@ -30,29 +30,33 @@ const Icons = ({ onBrushClick }) => {
     }
   };
 
+  const isAdmin = user?.role === "admin";
+
   return (
     <div className={styles.iconsContainer}>
-      {/* Загрузка файла */}
-      <div className={styles.icon}>
-        <div className={styles.imageWrapper}>
-          <label htmlFor="upload-input">
-            <Image
-              src="/svg/Load.svg"
-              fill
-              style={{ objectFit: "contain", cursor: "pointer" }}
-              alt="download-icon"
+      {/* Загрузка файла - только для админов */}
+     {isAdmin && (
+        <div className={styles.icon}>
+          <div className={styles.imageWrapper}>
+            <label htmlFor="upload-input">
+              <Image
+                src="/svg/Load.svg"
+                fill
+                style={{ objectFit: "contain", cursor: "pointer" }}
+                alt="download-icon"
+              />
+            </label>
+            <input
+              id="upload-input"
+              type="file"
+              accept=".xlsx, .xls"
+              onChange={handleFileUpload}
+              style={{ display: "none" }}
             />
-          </label>
-          <input
-            id="upload-input"
-            type="file"
-            accept=".xlsx, .xls"
-            onChange={handleFileUpload}
-            style={{ display: "none" }}
-          />
+          </div>
+          {/* {message && <p className={styles.message}>{message}</p>} */}
         </div>
-        {message && <p className={styles.message}>{message}</p>}
-      </div>
+      )}
 
       {/* Статистика */}
       <div className={styles.icon}>

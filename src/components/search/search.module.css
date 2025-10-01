@@ -11,7 +11,7 @@
   gap: 10px;
   padding: 5px 10px;
   border-radius: 12px;
-  background-color: var(--bg-color);
+  background-color: var(--button-bg-color);
   width: 100%;
   box-sizing: border-box; 
   height: 48px;
@@ -66,7 +66,7 @@
   top: 100%;
   left: 0;
   right: 0;
-  background: var(--bg-color);
+  background: var(--button-bg-color);
   border-radius: 0 0 12px 12px;
   margin-top: 0;
   /* box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); */
@@ -117,7 +117,7 @@
   width: 16px;
   height: 16px;
   border: 2px solid transparent;
-  border-top: 2px solid var(--text-color);
+  border-top: 2px solid var(--fg-color);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-left: auto;

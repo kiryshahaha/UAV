@@ -17,10 +17,24 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const [tileUrl, setTileUrl] = useState("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png");
+  const [isDarkTheme, setIsDarkTheme] = useState(false);
+  const [logoutLoading, setLogoutLoading] = useState(false);
 
   const handleTileUrlChange = (newUrl) => {
     setTileUrl(newUrl);
+
+    // Определяем тему на основе URL тайлов
+    const isDark = newUrl.includes("dark");
+    setIsDarkTheme(isDark);
   };
+
+  useEffect(() => {
+    if (isDarkTheme) {
+      document.body.setAttribute('data-theme', 'dark');
+    } else {
+      document.body.removeAttribute('data-theme');
+    }
+  }, [isDarkTheme]);
 
   // Проверяем аутентификацию при загрузке
   useEffect(() => {
@@ -112,7 +126,15 @@ export default function Home() {
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    setLogoutLoading(true); // Включаем индикатор загрузки
+    try {
+      await supabase.auth.signOut();
+      // После успешного выхода, автоматически произойдет переход на /auth
+      // благодаря обработчику onAuthStateChange
+    } catch (error) {
+      console.error("Ошибка при выходе:", error);
+      setLogoutLoading(false); // Выключаем индикатор в случае ошибки
+    }
   };
 
   if (loading) {
@@ -139,6 +161,8 @@ export default function Home() {
         />
       </div>
 
+      
+
       {/* Второй уровень - поиск и иконки */}
       <div className={styles.overlayContent}>
         <div className={styles.LeftSearchBar}>
@@ -148,11 +172,12 @@ export default function Home() {
           </div>
 
           <div className={styles.userPanel}>
-            <div className={styles.userInfo}>
-              {user.name} ({user.role})
-            </div>
-            <button onClick={handleLogout} className={styles.logoutButton}>
-              Выйти
+            <button 
+              onClick={handleLogout} 
+              className={styles.logoutButton}
+              disabled={logoutLoading} // Отключаем кнопку во время загрузки
+            >
+              {logoutLoading ? "Выход..." : "Выйти"}
             </button>
           </div>
         </div>
@@ -167,6 +192,7 @@ export default function Home() {
                   mapRef.current.changeTileLayer(newUrl);
                 }
               }}
+              user={user}
             />
           </div>
           <div className={styles.PlusMinusReset}>
@@ -179,6 +205,11 @@ export default function Home() {
           </div>
         </div>
       </div>
+      {logoutLoading && (
+        <div className={styles.logoutOverlay}>
+          <div className={styles.spinner}></div>
+        </div>
+      )}
     </div>
   );
 }

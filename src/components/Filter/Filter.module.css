@@ -6,7 +6,7 @@
     /* padding: 5px; */
     border-radius: 12px;
     transition: background-color 0.2s;
-    background-color: var(--bg-color);
+    background-color: var(--button-bg-color);
     transition: all 0.3s ease;
     width: 48px;
     height: 48px;

@@ -178,9 +178,9 @@ const Search = ({ onCitySelect }) => {
             <Image src='/svg/close.svg' width={16} height={16} alt='clear'/>
           </button>
         )}
-        {isLoading && (
+        {/* {isLoading && (
           <div className={styles.loader}></div>
-        )}
+        )} */}
       </div>
       
       <div 
