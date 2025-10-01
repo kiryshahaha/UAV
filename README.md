@@ -9,7 +9,7 @@
 ├── back/                     # Backend приложение (FastAPI)
 ├── src/                      # Frontend приложение (Next.js)
 ├── public/                   # Статические файлы фронтенда
-├── reports/                  # Отчеты и аналитика
+├── reports/                  # Отчеты (БД)
 ├── docker-compose.yml        # Docker компоновка
 ├── Dockerfile.frontend       # Docker образ фронтенда
 └── README.md                # Документация
