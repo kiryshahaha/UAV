@@ -3,7 +3,16 @@
 :root {
   --bg-color: #ffffff;
   --fg-color: #EDEDED;
-   --main-font-inter: 'Inter', system-ui, sans-serif;
+  --safe-area-bg: #ffffff;
+  --button-bg-color: #ffffff;
+  --main-font-inter: 'Inter', system-ui, sans-serif;
+}
+
+[data-theme="dark"] {
+  --bg-color: #1a1a1a;
+  --fg-color: #EDEDED;
+  --button-bg-color: #ffffff;
+  --safe-area-bg: #1a1a1a;
 }
 
 html,
