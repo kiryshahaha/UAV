@@ -6,16 +6,17 @@ from datetime import datetime
 import pandas as pd
 
 # Локальный fallback конфиг
+# data_integrator.py - обновите класс DatabaseConfig
 class DatabaseConfig:
     def get_connection_string(self):
         """Получить строку подключения из переменных окружения"""
-        DB_HOST = os.getenv('DB_HOST', 'localhost')
-        DB_PORT = os.getenv('DB_PORT', '5432')
+        DB_HOST = os.getenv('DB_HOST', 'aws-1-eu-north-1.pooler.supabase.com')
+        DB_PORT = os.getenv('DB_PORT', '6543')
         DB_NAME = os.getenv('DB_NAME', 'postgres')
-        DB_USER = os.getenv('DB_USER', 'postgres')
-        DB_PASSWORD = os.getenv('DB_PASSWORD', 'postgres')
+        DB_USER = os.getenv('DB_USER', 'postgres.adrxmxwncvtbvrmqiihb')
+        DB_PASSWORD = os.getenv('DB_PASSWORD', 'Trening0811!')
         
-        return f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+        return f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}?sslmode=require"
 
 class DataIntegrator:
     def __init__(self):
