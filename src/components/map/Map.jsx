@@ -60,6 +60,8 @@ const CONFIG = {
   },
 };
 
+const MAX_RADIUS_KM = 50; // максимальный радиус полета дрона
+
 function useDrones() {
   const [rawDrones, setRawDrones] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -234,7 +236,9 @@ const Map = forwardRef((props, ref) => {
     } else if (typeof rawRadiusStr === "number") {
       radiusKm = rawRadiusStr;
     }
-    if (isNaN(radiusKm) || radiusKm <= 0) return null;
+
+    // проверка на допустимый радиус
+    if (isNaN(radiusKm) || radiusKm <= 0 || radiusKm > MAX_RADIUS_KM) return null;
 
     return {
       center: [lat, lng],
