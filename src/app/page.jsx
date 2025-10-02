@@ -75,7 +75,7 @@ export default function Home() {
 
     try {
       const response = await fetch(
-        `http://localhost:8000/city/${encodeURIComponent(cityName)}`
+        `http://37.252.22.137:8000/city/${encodeURIComponent(cityName)}`
       );
       if (response.ok) {
         const cityData = await response.json();

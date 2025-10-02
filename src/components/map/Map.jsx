@@ -84,7 +84,7 @@ function useDrones() {
   useEffect(() => {
     async function fetchDrones() {
       try {
-        const res = await fetch("http://localhost:8000/flights/points");
+        const res = await fetch("http://37.252.22.137:8000/flights/points");
         if (!res.ok) throw new Error(`Ошибка: ${res.status}`);
         setRawDrones(await res.json());
       } catch (err) {
@@ -197,7 +197,7 @@ const Map = forwardRef((props, ref) => {
     setSelectedDrone(drone);
     setSelectedFlight(null);
     try {
-      const res = await fetch(`http://localhost:8000/flights/${drone.id}`);
+      const res = await fetch(`http://37.252.22.137:8000/flights/${drone.id}`);
       if (res.ok) {
         const data = await res.json();
         setSelectedFlight(data);
