@@ -13,6 +13,8 @@ RUN npm install
 # Копируем весь фронтенд-код
 COPY . .
 
+RUN npm run build
+
 # Указываем порт для Next.js
 EXPOSE 3000
 
