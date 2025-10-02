@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
 async function searchCities(searchTerm) {
-  // const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://backend:8000' //для запуска через docker
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"; // Для локального запуска
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://backend:8000' //для запуска через docker
+  //const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"; // Для локального запуска
 
   try {
     const url = searchTerm
