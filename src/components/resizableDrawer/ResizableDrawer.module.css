@@ -89,6 +89,14 @@
   color: #333;
 }
 
+.chartContainer {
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+  width: 100%;
+  position: relative; /* Добавляем для позиционирования лоадера */
+}
+
 /* Анимация появления */
 @keyframes slideIn {
   from {

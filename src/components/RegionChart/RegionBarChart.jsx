@@ -3,9 +3,16 @@ import React, { useEffect, useRef, useCallback, memo } from 'react';
 import * as d3 from 'd3';
 import styles from './RegionBarChart.module.css';
 
-const RegionBarChart = memo(({ regionName }) => {
+const RegionBarChart = memo(({ regionName, onLoad, onStartLoading }) => {
   const svgRef = useRef();
   const tooltipRef = useRef();
+
+  // Добавляем колбэк начала загрузки
+  useEffect(() => {
+    if (onStartLoading) {
+      onStartLoading();
+    }
+  }, [onStartLoading]);
 
   const renderEmptyState = useCallback(() => {
     const svg = d3.select(svgRef.current);
@@ -21,7 +28,12 @@ const RegionBarChart = memo(({ regionName }) => {
       .attr("fill", "currentColor")
       .attr("font-size", "16px")
       .text("Нет данных для отображения");
-  }, []);
+    
+    // Уведомляем о завершении загрузки
+    if (onLoad) {
+      onLoad();
+    }
+  }, [onLoad]);
 
   const renderErrorState = useCallback((errorMessage) => {
     const svg = d3.select(svgRef.current);
@@ -45,7 +57,54 @@ const RegionBarChart = memo(({ regionName }) => {
       .attr("fill", "currentColor")
       .attr("font-size", "12px")
       .text(errorMessage);
-  }, []);
+    
+    // Уведомляем о завершении загрузки
+    if (onLoad) {
+      onLoad();
+    }
+  }, [onLoad]);
+
+  const renderRegionNotFound = useCallback(() => {
+    const svg = d3.select(svgRef.current);
+    svg.selectAll("*").remove();
+    
+    const width = svgRef.current.clientWidth;
+    const height = svgRef.current.clientHeight;
+    
+    // Основное сообщение
+    svg.append("text")
+      .attr("x", width / 2)
+      .attr("y", height / 2 - 20)
+      .attr("text-anchor", "middle")
+      .attr("fill", "currentColor")
+      .attr("font-size", "16px")
+      .attr("font-weight", "600")
+      .text("Информация по региону не найдена");
+    
+    // Название региона
+    svg.append("text")
+      .attr("x", width / 2)
+      .attr("y", height / 2 + 10)
+      .attr("text-anchor", "middle")
+      .attr("fill", "currentColor")
+      .attr("font-size", "14px")
+      .text(`Регион: ${regionName}`);
+    
+    // Дополнительное пояснение
+    svg.append("text")
+      .attr("x", width / 2)
+      .attr("y", height / 2 + 40)
+      .attr("text-anchor", "middle")
+      .attr("fill", "currentColor")
+      .attr("font-size", "12px")
+      .attr("opacity", 0.7)
+      .text("Нет данных о полетах за выбранный период");
+    
+    // Уведомляем о завершении загрузки
+    if (onLoad) {
+      onLoad();
+    }
+  }, [regionName, onLoad]);
 
   const renderChart = useCallback((data) => {
     if (!data || !data.monthly_stats || data.monthly_stats.length === 0) {
@@ -184,7 +243,7 @@ const RegionBarChart = memo(({ regionName }) => {
       .attr("fill", "currentColor")
       .attr("font-size", "16px")
       .attr("font-weight", "600")
-    //   .text(`Статистика полетов по месяцам - ${regionName}`);
+      .text(`Статистика полетов - ${regionName}`);
 
     // Общее количество полетов
     const totalFlights = monthlyData.reduce((sum, d) => sum + d.flight_count, 0);
@@ -197,8 +256,13 @@ const RegionBarChart = memo(({ regionName }) => {
       .attr("font-weight", "500")
       .text(`Всего полетов: ${totalFlights}`);
 
-  }, [renderEmptyState, regionName]);
+    // Уведомляем о завершении загрузки
+    if (onLoad) {
+      onLoad();
+    }
 
+  }, [renderEmptyState, regionName, onLoad]);
+  
   const fetchDataAndRender = useCallback(async () => {
     if (!regionName) {
       renderEmptyState();
@@ -226,27 +290,8 @@ const RegionBarChart = memo(({ regionName }) => {
       );
 
       if (!regionData) {
-        const svg = d3.select(svgRef.current);
-        svg.selectAll("*").remove();
-        
-        const width = svgRef.current.clientWidth;
-        const height = svgRef.current.clientHeight;
-        
-        svg.append("text")
-          .attr("x", width / 2)
-          .attr("y", height / 2 - 10)
-          .attr("text-anchor", "middle")
-          .attr("fill", "currentColor")
-          .attr("font-size", "16px")
-          .text("Информация по региону не найдена");
-          
-        svg.append("text")
-          .attr("x", width / 2)
-          .attr("y", height / 2 + 20)
-          .attr("text-anchor", "middle")
-          .attr("fill", "currentColor")
-          .attr("font-size", "14px")
-          .text(`Регион: ${regionName}`);
+        // Используем новую функцию для отображения "регион не найден"
+        renderRegionNotFound();
         return;
       }
       
@@ -255,7 +300,7 @@ const RegionBarChart = memo(({ regionName }) => {
       console.error('Ошибка загрузки данных региона:', error);
       renderErrorState(error.message);
     }
-  }, [regionName, renderEmptyState, renderChart, renderErrorState]);
+  }, [regionName, renderEmptyState, renderChart, renderErrorState, renderRegionNotFound]);
 
   useEffect(() => {
     fetchDataAndRender();

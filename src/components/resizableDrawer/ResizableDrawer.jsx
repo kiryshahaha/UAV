@@ -1,11 +1,14 @@
-import React,{ useState, useEffect, useCallback, memo } from 'react';
+// components/ResizableDrawer/ResizableDrawer.jsx
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import { Resizable } from 'react-resizable';
 import styles from './ResizableDrawer.module.css';
 import RegionsBarChart from '../RegionsBarChart/RegionsBarChart';
+import Loader from '../loader/Loader';
 
 const ResizableDrawer = memo(({ onClose, isOpen }) => {
   const [width, setWidth] = useState(0);
   const [isClosing, setIsClosing] = useState(false);
+  const [isChartLoading, setIsChartLoading] = useState(true);
 
   useEffect(() => {
     const initialWidth = Math.min(window.innerWidth / 2, 800);
@@ -26,6 +29,18 @@ const ResizableDrawer = memo(({ onClose, isOpen }) => {
       setIsClosing(false);
     }, 300);
   }, [onClose]);
+
+  // Обработчик завершения загрузки графика
+  const handleChartLoaded = useCallback(() => {
+    setIsChartLoading(false);
+  }, []);
+
+  // Сброс состояния загрузки при открытии/закрытии
+  useEffect(() => {
+    if (isOpen) {
+      setIsChartLoading(true);
+    }
+  }, [isOpen]);
 
   const drawerClassNames = [
     styles.drawer,
@@ -64,7 +79,8 @@ const ResizableDrawer = memo(({ onClose, isOpen }) => {
             )}
           </div>
           <div className={styles.chartContainer}>
-            <RegionsBarChart />
+            {isChartLoading && <Loader />}
+            <RegionsBarChart onChartLoaded={handleChartLoaded} />
           </div>
         </div>
       </Resizable>

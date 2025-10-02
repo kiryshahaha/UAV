@@ -1,9 +1,9 @@
-// components/RegionsBarChart.jsx
+// components/RegionsBarChart/RegionsBarChart.jsx
 import React, { useEffect, useRef, useCallback, memo } from 'react';
 import * as d3 from 'd3';
 import styles from './RegionsBarChart.module.css';
 
-const RegionsBarChart = () => {
+const RegionsBarChart = ({ onChartLoaded }) => {
   const svgRef = useRef();
   const tooltipRef = useRef();
 
@@ -22,7 +22,10 @@ const RegionsBarChart = () => {
       .attr("fill", "currentColor")
       .attr("font-size", "16px")
       .text("Нет данных для отображения");
-  }, []);
+    
+    // Уведомляем о завершении рендеринга
+    onChartLoaded && onChartLoaded();
+  }, [onChartLoaded]);
 
   const renderErrorState = useCallback((errorMessage) => {
     const svg = d3.select(svgRef.current);
@@ -46,7 +49,10 @@ const RegionsBarChart = () => {
       .attr("fill", "currentColor")
       .attr("font-size", "12px")
       .text(errorMessage);
-  }, []);
+    
+    // Уведомляем о завершении рендеринга
+    onChartLoaded && onChartLoaded();
+  }, [onChartLoaded]);
 
   const renderChart = useCallback((data) => {
     if (!data || data.length === 0) {
@@ -252,7 +258,10 @@ const RegionsBarChart = () => {
         .attr("font-size", "11px")
         .attr("dy", "0.5em");
     }
-  }, [renderEmptyState]);
+
+    // Уведомляем о завершении рендеринга
+    onChartLoaded && onChartLoaded();
+  }, [renderEmptyState, onChartLoaded]);
 
   // Мемоизируем основную функцию загрузки и рендеринга
   const fetchDataAndRender = useCallback(async () => {
