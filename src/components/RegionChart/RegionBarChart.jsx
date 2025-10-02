@@ -271,7 +271,7 @@ const RegionBarChart = memo(({ regionName, onLoad, onStartLoading }) => {
 
     try {
       // Сначала получаем общую статистику по регионам
-      const response = await fetch('http://localhost:8000/stats/regions/monthly');
+      const response = await fetch('http://37.252.22.137:8000/stats/regions/monthly');
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

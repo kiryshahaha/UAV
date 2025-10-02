@@ -266,7 +266,7 @@ const RegionsBarChart = ({ onChartLoaded }) => {
   // Мемоизируем основную функцию загрузки и рендеринга
   const fetchDataAndRender = useCallback(async () => {
     try {
-      const response = await fetch('http://localhost:8000/stats/regions');
+      const response = await fetch('http://37.252.22.137:8000/stats/regions');
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
