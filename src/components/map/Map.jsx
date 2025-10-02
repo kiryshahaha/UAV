@@ -20,6 +20,7 @@ import {
   TileLayer,
   GeoJSON,
   MarkerClusterGroup,
+  Circle,
 } from "@/components/leaflet/leaFletNoSSR.js";
 import DronePopup from "./DronePopup";
 import DroneMarker from "./DroneMarker";
@@ -51,6 +52,12 @@ const CONFIG = {
     disableClusteringAtZoom: 16,
     spiderLegPolylineOptions: { weight: 1.5, color: "#222", opacity: 0.5 },
   },
+  zoneStyle: {
+    color: "#3388ff",
+    fillColor: "#3388ff",
+    fillOpacity: 0.2,
+    weight: 2,
+  },
 };
 
 function useDrones() {
@@ -79,7 +86,7 @@ function useDrones() {
         if (!res.ok) throw new Error(`Ошибка: ${res.status}`);
         setRawDrones(await res.json());
       } catch (err) {
-        console.error("❌ Ошибка загрузки дронов:", err);
+        console.error("Ошибка загрузки дронов:", err);
       } finally {
         setLoading(false);
       }
@@ -127,50 +134,49 @@ function useRegions({ foundRegions, mapRef, setSelectedRegion }) {
       const layer = new L.GeoJSON(geoJsonHighlight);
       mapRef.current.fitBounds(layer.getBounds(), { padding: [50, 50] });
 
-      const center = layer.getBounds().getCenter();
       const regionName = matchedFeatures[0].properties.REGION_NAME;
-
-      // Устанавливаем позицию попапа по центру карты
       const container = mapRef.current.getContainer();
       setSelectedRegion({
         name: regionName,
         position: {
           x: container.clientWidth / 2,
-          y: container.clientHeight / 2
-        }
+          y: container.clientHeight / 2,
+        },
       });
     }
   }, [foundRegions, mapRef, setSelectedRegion]);
 }
 
 const Map = forwardRef((props, ref) => {
-  const { tileUrl, onTileUrlChange, foundRegions = [], onShowRegionStatistics = [] } = props;
+  const {
+    tileUrl,
+    onTileUrlChange,
+    foundRegions = [],
+    onShowRegionStatistics = [],
+  } = props;
   const mapRef = useRef(null);
   const markerClusterRef = useRef(null);
   const { drones, droneIcon, loading } = useDrones();
 
   const [selectedDrone, setSelectedDrone] = useState(null);
+  const [selectedFlight, setSelectedFlight] = useState(null);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
   const [selectedRegion, setSelectedRegion] = useState(null);
-  const [selectedRegionForDrawer, setSelectedRegionForDrawer] = useState(null);
 
   useRegions({ foundRegions, mapRef, setSelectedRegion });
 
   const onEachRegion = useCallback((feature, layer) => {
-    // Убираем полностью стандартные попапы - не вызываем layer.bindPopup()
-
     layer.on({
       mouseover: () => layer.setStyle(CONFIG.hoverStyle),
       mouseout: () => layer.setStyle(CONFIG.regionStyle),
       click: (e) => {
-        // Устанавливаем позицию попапа по клику
         const rect = e.target._map.getContainer().getBoundingClientRect();
         setSelectedRegion({
           name: feature.properties.REGION_NAME,
           position: {
             x: e.originalEvent.clientX - rect.left,
             y: e.originalEvent.clientY - rect.top,
-          }
+          },
         });
         mapRef.current?.fitBounds(layer.getBounds(), {
           padding: [50, 50],
@@ -180,26 +186,87 @@ const Map = forwardRef((props, ref) => {
     });
   }, []);
 
-  const handleDroneClick = useCallback((drone, event) => {
+  const handleDroneClick = useCallback(async (drone, event) => {
     const rect = event.target._map.getContainer().getBoundingClientRect();
     setPopupPosition({
       x: event.originalEvent.clientX - rect.left,
       y: event.originalEvent.clientY - rect.top,
     });
     setSelectedDrone(drone);
+    setSelectedFlight(null);
+    try {
+      const res = await fetch(`http://localhost:8000/flights/${drone.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setSelectedFlight(data);
+      }
+    } catch (err) {
+      console.error("Ошибка загрузки зоны полета:", err);
+    }
   }, []);
 
-  const handleClosePopup = useCallback(() => setSelectedDrone(null), []);
+  const handleClosePopup = useCallback(() => {
+    setSelectedDrone(null);
+    setSelectedFlight(null);
+  }, []);
   const handleCloseRegionPopup = useCallback(() => setSelectedRegion(null), []);
+
+  const circleData = useMemo(() => {
+    if (!selectedFlight) return null;
+    const rawRadiusStr = selectedFlight?.flight_zone_radius;
+    const takeoffPoint = selectedFlight?.takeoff_point;
+    if (!takeoffPoint || !takeoffPoint.latitude || !takeoffPoint.longitude) {
+      return null;
+    }
+
+    const lat = Number(takeoffPoint.latitude);
+    const lng = Number(takeoffPoint.longitude);
+    if (isNaN(lat) || isNaN(lng)) return null;
+
+    let radiusKm = NaN;
+    if (typeof rawRadiusStr === "string") {
+      if (rawRadiusStr.startsWith("R")) {
+        radiusKm = parseInt(rawRadiusStr.substring(1), 10);
+      } else {
+        const match = rawRadiusStr.match(/\d+/);
+        radiusKm = match ? parseInt(match[0], 10) : NaN;
+      }
+    } else if (typeof rawRadiusStr === "number") {
+      radiusKm = rawRadiusStr;
+    }
+    if (isNaN(radiusKm) || radiusKm <= 0) return null;
+
+    return {
+      center: [lat, lng],
+      radius: radiusKm * 1000,
+      style: CONFIG.zoneStyle,
+    };
+  }, [selectedFlight]);
+
+  useEffect(() => {
+    if (!mapRef.current || !circleData) return;
+    const L = require("leaflet");
+    const tempCircle = L.circle(circleData.center, {
+      radius: circleData.radius,
+    }).addTo(mapRef.current);
+    const bounds = tempCircle.getBounds();
+    mapRef.current.removeLayer(tempCircle);
+    if (bounds.isValid()) {
+      mapRef.current.fitBounds(bounds, {
+        padding: [50, 50],
+        animate: true,
+        duration: 1,
+      });
+    }
+  }, [circleData]);
 
   useEffect(() => {
     if (!mapRef.current) return;
     const handleMapClick = (e) => {
-      // Закрываем попап дрона если кликнули не по маркеру
       if (!e.originalEvent?.target?.closest?.(".leaflet-marker-icon")) {
         setSelectedDrone(null);
+        setSelectedFlight(null);
       }
-      // Закрываем попап региона если кликнули не по региону
       if (!e.originalEvent?.target?.closest?.(".leaflet-interactive")) {
         setSelectedRegion(null);
       }
@@ -208,14 +275,14 @@ const Map = forwardRef((props, ref) => {
     return () => mapRef.current?.off("click", handleMapClick);
   }, []);
 
-  const handleShowStatistics = useCallback((regionName) => {
-    console.log("Opening drawer for region:", regionName);
-    // Вместо локального состояния вызываем функцию из пропсов
-    onShowRegionStatistics?.(regionName);
-    // Закрываем попап региона
-    setSelectedRegion(null);
-  }, [onShowRegionStatistics]);
-  
+  const handleShowStatistics = useCallback(
+    (regionName) => {
+      onShowRegionStatistics?.(regionName);
+      setSelectedRegion(null);
+    },
+    [onShowRegionStatistics]
+  );
+
   const droneClusterGroup = useMemo(() => {
     if (!droneIcon || !drones.length || loading) return null;
     return (
@@ -278,10 +345,18 @@ const Map = forwardRef((props, ref) => {
           style={CONFIG.regionStyle}
           onEachFeature={onEachRegion}
         />
+        {circleData && (
+          <Circle
+            center={circleData.center}
+            radius={circleData.radius}
+            pathOptions={circleData.style}
+          />
+        )}
         {droneClusterGroup}
       </MapContainer>
       <DronePopup
         drone={selectedDrone}
+        flight={selectedFlight}
         isVisible={!!selectedDrone}
         onClose={handleClosePopup}
         position={popupPosition}
