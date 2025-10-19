@@ -213,10 +213,12 @@ src/
 ```bash
 # Активируем локальное окружение
 python -m venv myenv
-# Устанавливаем зависимости
-pip install -r requirements.txt
+
+myenv\Scripts\activate
 # Переходим в папку бэкенда
 cd back
+# Устанавливаем зависимости в
+pip install -r requirements.txt
 #  Переходим в app
 cd app
 # Запуск FastAPI сервера

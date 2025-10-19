@@ -5,18 +5,22 @@ import styles from "./Icons.module.css";
 import DatePickerTrigger from "../DatePickerPopup/DatePickerTrigger";
 import DashboardPopup from "../DashboardPopup/DashboardPopup";
 import OperatorsPopup from "../OperatorsPopup/OperatorsPopup";
-import TableManager from "../TableManager/TableManager";
 
-const Icons = ({ 
-  onBrushClick, 
-  onStatsClick, 
-  user, 
-  onOpenDatePicker, 
-  selectedDate, 
-  dateRange, 
+import PresentationGenerator from "../PowerpointPopUp/PresentationGenerator";
+import PdfGenerator from "../PdfPopUp/PdfGenerator"
+const Icons = ({
+  onBrushClick,
+  onStatsClick,
+  user,
+  onOpenDatePicker,
+  selectedDate,
+  dateRange,
   selectedRegion,
-  onOpenTableManager 
+  onOpenTableManager,
 }) => {
+  const [isPDFGeneratorOpen, setIsPDFGeneratorOpen] = useState(false);
+  const [isPresentationGeneratorOpen, setIsPresentationGeneratorOpen] =
+    useState(false);
   const [isStatsExpanded, setIsStatsExpanded] = useState(false);
   const [isDashboardOpen, setIsDashboardOpen] = useState(false);
   const [isOperatorsOpen, setIsOperatorsOpen] = useState(false);
@@ -26,14 +30,17 @@ const Icons = ({
   // Обработчик клика вне компонента
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (statsContainerRef.current && !statsContainerRef.current.contains(event.target)) {
+      if (
+        statsContainerRef.current &&
+        !statsContainerRef.current.contains(event.target)
+      ) {
         setIsStatsExpanded(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -71,15 +78,30 @@ const Icons = ({
       onOpenTableManager();
     }
   };
+  const handlePresentationClick = () => {
+    setIsStatsExpanded(false);
+    setIsPresentationGeneratorOpen(true);
+  };
+  const handleClosePresentationGenerator = () => {
+    setIsPresentationGeneratorOpen(false);
+  };
 
+  const handleClosePDFGenerator = () => {
+    setIsPDFGeneratorOpen(false);
+  };
+
+  const handleGeneratePDF = async (params) => {
+    console.log("PDF отчет сгенерирован с параметрами:", params);
+  };
+  const handlePDFClick = () => {
+    setIsStatsExpanded(false);
+    setIsPDFGeneratorOpen(true);
+  };
   return (
     <>
       <div className={styles.iconsContainer}>
         {/* Table Manager - для всех пользователей, но с разными правами */}
-        <div
-          className={styles.icon}
-          onClick={handleTableManagerClick}
-        >
+        <div className={styles.icon} onClick={handleTableManagerClick}>
           <div className={styles.imageWrapper}>
             <Image
               src="/svg/table.svg"
@@ -101,7 +123,7 @@ const Icons = ({
         {/* Контейнер для статистики с выдвигающимися кнопками */}
         <div className={styles.statsContainer} ref={statsContainerRef}>
           <div
-            className={`${styles.icon} ${isStatsExpanded ? styles.active : ''}`}
+            className={`${styles.icon} ${isStatsExpanded ? styles.active : ""}`}
             onClick={handleStatsClick}
           >
             <div className={styles.imageWrapper}>
@@ -114,11 +136,12 @@ const Icons = ({
             </div>
           </div>
 
-          <div className={`${styles.statsSubmenu} ${isStatsExpanded ? styles.expanded : ''}`}>
-            <div
-              className={styles.submenuIcon}
-              onClick={handleMainStatsClick}
-            >
+          <div
+            className={`${styles.statsSubmenu} ${
+              isStatsExpanded ? styles.expanded : ""
+            }`}
+          >
+            <div className={styles.submenuIcon} onClick={handleMainStatsClick}>
               <div className={styles.imageWrapper}>
                 <Image
                   src="/svg/stat.svg"
@@ -129,10 +152,7 @@ const Icons = ({
               </div>
             </div>
 
-            <div
-              className={styles.submenuIcon}
-              onClick={handleOperatorsClick}
-            >
+            <div className={styles.submenuIcon} onClick={handleOperatorsClick}>
               <div className={styles.imageWrapper}>
                 <Image
                   src="/svg/operator.svg"
@@ -143,10 +163,7 @@ const Icons = ({
               </div>
             </div>
 
-            <div
-              className={styles.submenuIcon}
-              onClick={handleDashboardClick}
-            >
+            <div className={styles.submenuIcon} onClick={handleDashboardClick}>
               <div className={styles.imageWrapper}>
                 <Image
                   src="/svg/dashboard.svg"
@@ -160,7 +177,7 @@ const Icons = ({
             {/*кнопка презентации */}
             <div
               className={styles.submenuIcon}
-              onClick={handleDashboardClick}
+              onClick={handlePresentationClick}
             >
               <div className={styles.imageWrapper}>
                 <Image
@@ -173,10 +190,7 @@ const Icons = ({
             </div>
 
             {/*кнопка pdf отчета */}
-            <div
-              className={styles.submenuIcon}
-              onClick={handleDashboardClick}
-            >
+            <div className={styles.submenuIcon} onClick={handlePDFClick}>
               <div className={styles.imageWrapper}>
                 <Image
                   src="/svg/pdf.svg"
@@ -190,7 +204,10 @@ const Icons = ({
         </div>
 
         {/* Кисть для смены карты */}
-        <div className={styles.icon} onClick={() => onBrushClick && onBrushClick()}>
+        <div
+          className={styles.icon}
+          onClick={() => onBrushClick && onBrushClick()}
+        >
           <div className={styles.imageWrapper}>
             <Image
               src="/svg/brush.svg"
@@ -213,6 +230,21 @@ const Icons = ({
       <OperatorsPopup
         isOpen={isOperatorsOpen}
         onClose={handleCloseOperators}
+        dateRange={dateRange}
+        selectedRegion={selectedRegion}
+      />
+      {/* Генератор презентаций */}
+      <PresentationGenerator
+        isOpen={isPresentationGeneratorOpen}
+        onClose={handleClosePresentationGenerator}
+        dateRange={dateRange}
+        selectedRegion={selectedRegion}
+      />
+      {/* Генератор PDF */}
+      <PdfGenerator
+        isOpen={isPDFGeneratorOpen}
+        onClose={handleClosePDFGenerator}
+        onGenerate={handleGeneratePDF}
         dateRange={dateRange}
         selectedRegion={selectedRegion}
       />

@@ -94,3 +94,27 @@ class TableCreateRequest(BaseModel):
 class UploadWithNameRequest(BaseModel):
     custom_name: str
     description: Optional[str] = None
+
+class ExportRequest(BaseModel):
+    report_type: str
+    date_from: str = None
+    date_to: str = None
+    regions: list = None
+    operator_name: str = None
+    operator_names: list = None
+    
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "report_type": "general",
+                "date_from": "2025-01-01",
+                "date_to": "2025-12-31",
+                "regions": ["Москва", "Санкт-Петербург"]
+            }
+        }
+class ExportPreviewResponse(BaseModel):
+    report_type: str
+    filters: dict
+    record_count: int
+    available_data: dict

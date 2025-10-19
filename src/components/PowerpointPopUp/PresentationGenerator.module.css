@@ -1,0 +1,521 @@
+/* components/PowerpointPopUp/PresentationGenerator.module.css */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.popup {
+  background: white;
+  border-radius: 20px;
+  padding: 32px;
+  max-width: 480px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s ease-out;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 8px 0;
+  line-height: 1.2;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.dataInfo {
+  font-size: 12px;
+  color: #007bff;
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: #f0f8ff;
+  border-radius: 6px;
+  border: 1px solid #d1e7ff;
+}
+
+/* Быстрый выбор периода */
+.quickSelection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.rangeOption {
+  padding: 16px;
+  border: 2px solid #e1e5e9;
+  border-radius: 12px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  width: 100%;
+}
+
+.rangeOption:hover {
+  border-color: #34C759;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(52, 199, 89, 0.1);
+}
+
+.rangeTitle {
+  display: block;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+}
+
+.rangeDescription {
+  display: block;
+  font-size: 12px;
+  color: #666;
+  line-height: 1.4;
+}
+
+.rangeOptionSelected {
+  border-color: #34C759 !important;
+  background: #f0fff4 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(52, 199, 89, 0.15) !important;
+}
+
+.rangeOptionSelected .rangeTitle {
+  color: #34C759 !important;
+}
+
+/* Кастомный выбор периода */
+.customSelection {
+  margin-bottom: 24px;
+}
+
+.datePickers {
+  display: flex;
+  /* flex-direction: column; */
+  gap: 16px;
+}
+
+.datePickerGroup {
+    width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.datePickerLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.datePickerInput {
+  padding: 12px 16px;
+  border: 2px solid #e1e5e9;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1a1a1a;
+  background: white;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.datePickerInput:focus {
+  outline: none;
+  border-color: #34C759;
+  box-shadow: 0 0 0 3px rgba(52, 199, 89, 0.1);
+}
+
+.datePickerInput:hover {
+  border-color: #34C759;
+}
+
+/* Выбор региона */
+.regionSelection {
+  margin-bottom: 24px;
+}
+
+.regionLabel {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 8px;
+}
+
+.customSelectContainer {
+  position: relative;
+  width: 100%;
+}
+
+.customSelectTrigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border: 2px solid #e1e5e9;
+  border-radius: 12px;
+  background: white;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1a1a1a;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.customSelectTrigger:hover {
+  border-color: #34C759;
+}
+
+.customSelectTriggerOpen {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-color: #34C759;
+}
+
+.customSelectValue {
+  flex: 1;
+  text-align: left;
+}
+
+.customSelectArrow {
+  transition: transform 0.2s ease;
+  color: #666;
+  font-size: 12px;
+}
+
+.customSelectArrowOpen {
+  transform: rotate(180deg);
+}
+
+.regionDropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border-radius: 0 0 12px 12px;
+  border: 2px solid #34C759;
+  border-top: none;
+  margin-top: -2px;
+  max-height: 0;
+  overflow-y: hidden;
+  z-index: 100;
+  transition: all 0.3s ease;
+  opacity: 0;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.regionDropdownOpen {
+  max-height: 200px;
+  overflow-y: auto;
+  opacity: 1;
+}
+
+.regionDropdownItem {
+  padding: 12px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  background: white;
+  color: #1a1a1a;
+}
+
+.regionDropdownItem:hover {
+  background-color: #f8f9fa;
+}
+
+.regionDropdownItem:last-child {
+  border-bottom: none;
+}
+
+.regionDropdownItemSelected {
+  background-color: #34C759;
+  color: white;
+}
+
+.regionDropdownItemSelected:hover {
+  background-color: #2daa4c;
+}
+
+/* Предпросмотр выбора */
+.selectedPreview {
+  margin: 24px 0;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border-left: 4px solid #34C759;
+}
+
+.previewRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.previewRow:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.previewLabel {
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+}
+
+.previewValue {
+  font-size: 14px;
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+/* Действия */
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.cancelButton {
+  padding: 14px 20px;
+  border: 2px solid #e1e5e9;
+  border-radius: 12px;
+  background: white;
+  color: #666;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.cancelButton:hover:not(:disabled) {
+  background: #f8f9fa;
+  border-color: #ccc;
+  transform: translateY(-1px);
+}
+
+.cancelButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.generateButton {
+  padding: 14px 24px;
+  border: none;
+  border-radius: 12px;
+  background: #34C759;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.generateButton:hover:not(:disabled) {
+  background: #2daa4c;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(52, 199, 89, 0.3);
+}
+
+.generateButton:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Spinner */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Стили для react-datepicker */
+.datePickerContainer {
+  display: block !important;
+  width: 100%;
+}
+
+.datePickerCalendar {
+  border: none !important;
+  border-radius: 16px !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15) !important;
+  background: #ffffff !important;
+  padding: 16px !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  overflow: hidden;
+}
+
+/* Кастомные стили для заголовка DatePicker */
+.customHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 4px;
+  margin-bottom: 8px;
+}
+
+.navButton {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+  color: #666;
+}
+
+.navButton:hover:not(:disabled) {
+  background-color: #f0f0f0;
+}
+
+.navButton:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.navIcon {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.monthYearContainer {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.monthSelect,
+.yearSelect {
+  padding: 6px 8px;
+  border: 1px solid #e1e5e9;
+  border-radius: 6px;
+  background: white;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1a1a1a;
+  cursor: pointer;
+}
+
+.monthSelect:focus,
+.yearSelect:focus {
+  outline: none;
+  border-color: #34C759;
+}
+
+/* Анимации */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Адаптивность */
+@media (max-width: 480px) {
+  .popup {
+    padding: 24px 16px;
+    margin: 20px;
+  }
+  
+  .title {
+    font-size: 20px;
+  }
+  
+  .actions {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .cancelButton,
+  .generateButton {
+    padding: 12px 16px;
+  }
+  
+  .selectedPreview {
+    padding: 16px;
+  }
+  
+  .previewRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .datePickerCalendar {
+    transform: scale(0.9);
+    transform-origin: center top;
+  }
+}
+
+/* Скрытие нативного скроллбара для dropdown */
+.regionDropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.regionDropdown::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.regionDropdown::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.regionDropdown::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
