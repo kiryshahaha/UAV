@@ -1,0 +1,266 @@
+/* components/ResizableDrawer.module.css */
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  background: var(--bg-color);
+  box-shadow: -2px 0 8px rgba(0,0,0,0.15);
+  z-index: 1000;
+  transition: transform 0.3s ease-out;
+  transform: translateX(0);
+  overflow: hidden; /* Добавляем чтобы drawer не прокручивался */
+}
+
+.drawer.hidden {
+  display: none;
+}
+
+.resizeHandle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 8px;
+  height: 100%;
+  background: #ddd;
+  cursor: col-resize;
+  transition: background-color 0.2s;
+  z-index: 1001;
+}
+
+.resizeHandle:hover {
+  background: #bbb;
+}
+
+.resizeHandle:active {
+  background: #999;
+}
+
+.drawerContent {
+  padding: 20px;
+  height: 100%;
+  overflow: hidden; /* Убираем скролл */
+  box-sizing: border-box;
+  margin-left: 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.drawerContent h2 {
+  margin: 0 0 16px 0;
+  color: #333;
+  font-size: 1.5rem;
+}
+
+.scrollableContent {
+  flex: 1;
+  overflow: hidden; /* Убираем скролл */
+  overflow-x: hidden;
+  min-height: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.chartContainer {
+  width: 100%;
+  min-height: 400px;
+  height: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Добавляем стили для центрирования лоадера */
+.loaderContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: 400px; /* Минимальная высота как у chartContainer */
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #eee;
+  flex-shrink: 0;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.closeButton:hover {
+  background: #f5f5f5;
+  color: #333;
+}
+
+/* Убираем стили скроллбара так как скролла больше нет */
+.scrollableContent::-webkit-scrollbar {
+  width: 0;
+}
+
+.scrollableContent::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollableContent::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 10px 0;
+  flex-shrink: 0;
+  border-top: 1px solid #eee;
+}
+
+.pagination button {
+  padding: 8px 16px;
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.pagination button:hover:not(:disabled) {
+  background: #e0e0e0;
+}
+
+.pagination button:disabled {
+  background: #eee;
+  cursor: not-allowed;
+}
+
+.pagination span {
+  font-size: 14px;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.drawer:not(.slideOut) {
+  animation: slideIn 0.3s ease-out;
+}
+
+.drawer.slideOut {
+  animation: slideOut 0.3s ease-out;
+}
+
+@media (max-width: 768px) {
+  .drawer {
+    width: 95% !important;
+  }
+  
+  .resizeHandle {
+    display: none;
+  }
+  
+  .drawerContent {
+    margin-left: 0;
+    padding: 16px;
+  }
+  
+  .drawerContent h2 {
+    font-size: 1.25rem;
+  }
+  
+  .chartContainer {
+    min-height: 300px;
+  }
+  
+  .loaderContainer {
+    min-height: 300px;
+  }
+}
+
+@media (max-height: 700px) {
+  .chartContainer {
+    min-height: 250px;
+  }
+  
+  .loaderContainer {
+    min-height: 250px;
+  }
+}
+
+[data-theme="dark"] .drawer {
+  background: rgb(88, 88, 88);
+  box-shadow: -2px 0 8px rgba(0,0,0,0.3);
+}
+
+[data-theme="dark"] .drawerContent h2 {
+  color: #e9ecef;
+}
+
+[data-theme="dark"] .header {
+  border-bottom-color: #495057;
+}
+
+[data-theme="dark"] .closeButton {
+  color: #adb5bd;
+}
+
+[data-theme="dark"] .closeButton:hover {
+  background: #495057;
+  color: #e9ecef;
+}
+
+[data-theme="dark"] .pagination {
+  border-top-color: #495057;
+}
+
+[data-theme="dark"] .pagination button {
+  background: #495057;
+  border-color: #6c757d;
+  color: #e9ecef;
+}
+
+[data-theme="dark"] .pagination button:hover:not(:disabled) {
+  background: #5a6268;
+}
+
+[data-theme="dark"] .pagination button:disabled {
+  background: #343a40;
+}
+
+[data-theme="dark"] .pagination span {
+  color: #e9ecef;
+}

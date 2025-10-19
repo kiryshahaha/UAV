@@ -1,0 +1,111 @@
+/* components/RegionBarChart.module.css */
+.container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background: var(--bg-color);
+  display: flex;
+  flex-direction: column;
+}
+
+.chartWrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.chart {
+  flex: 1;
+  min-height: 400px;
+}
+
+.loaderContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 400px;
+}
+
+.emptyContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  padding: 20px;
+  color: currentColor;
+}
+
+.emptyTitle {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.regionName {
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.emptySubtitle {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  padding: 20px;
+  color: currentColor;
+}
+
+.errorTitle {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.errorMessage {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.totalFlights {
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 10px;
+  color: currentColor;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .container {
+    padding: 10px;
+  }
+  
+  .chart {
+    min-height: 300px;
+  }
+  
+  .loaderContainer {
+    min-height: 300px;
+  }
+}
+
+@media (max-height: 700px) {
+  .chart {
+    min-height: 250px;
+  }
+  
+  .loaderContainer {
+    min-height: 250px;
+  }
+}

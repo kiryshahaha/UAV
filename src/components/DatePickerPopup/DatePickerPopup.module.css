@@ -1,0 +1,1274 @@
+/* components/DatePickerPopup/DatePickerPopup.module.css */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.popup {
+  background: white;
+  border-radius: 20px;
+  padding: 32px;
+  max-width: 480px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s ease-out;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 8px 0;
+  line-height: 1.2;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Индикатор прогресса */
+.progress {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding: 0 20px;
+  position: relative;
+}
+
+.progress::before {
+  content: '';
+  position: absolute;
+  top: 16px;
+  left: 20px;
+  right: 20px;
+  height: 2px;
+  background: #e1e5e9;
+  z-index: 1;
+}
+
+.progressStep {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+}
+
+.stepNumber {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid #e1e5e9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 8px;
+  transition: all 0.3s ease;
+}
+
+.stepLabel {
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+  text-align: center;
+}
+
+.progressStep.active .stepNumber {
+  background: #007bff;
+  border-color: #007bff;
+  color: white;
+}
+
+.progressStep.active .stepLabel {
+  color: #007bff;
+  font-weight: 600;
+}
+
+/* Выбор диапазона */
+.rangeSelection {
+  margin: 20px 0;
+}
+
+.quickSelectionGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.rangeOption {
+  padding: 16px;
+  border: 2px solid #e1e5e9;
+  border-radius: 12px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.rangeOption:hover {
+  border-color: #007bff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.1);
+}
+
+.rangeTitle {
+  display: block;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+}
+
+.rangeDescription {
+  display: block;
+  font-size: 12px;
+  color: #666;
+}
+
+.customSelection {
+  border-top: 1px solid #f0f0f0;
+  padding-top: 20px;
+}
+
+.customOption {
+  width: 100%;
+  padding: 20px;
+  border: 2px dashed #e1e5e9;
+  border-radius: 12px;
+  background: #f8f9fa;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.customOption:hover {
+  border-color: #007bff;
+  background: #e3f2fd;
+  transform: translateY(-2px);
+}
+
+.customTitle {
+  display: block;
+  font-size: 18px;
+  font-weight: 600;
+  color: #007bff;
+  margin-bottom: 8px;
+}
+
+.customDescription {
+  display: block;
+  font-size: 14px;
+  color: #666;
+}
+
+/* Выбор даты */
+.dateSelection {
+  margin: 20px 0;
+}
+
+.datePickerWrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+/* Стили для react-datepicker */
+.datePickerContainer {
+  display: block !important;
+}
+
+.datePickerInput {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e1e5e9;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1a1a1a;
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.datePickerInput:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.datePickerCalendar {
+  border: none !important;
+  border-radius: 16px !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15) !important;
+  background: #ffffff !important;
+  padding: 16px !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  overflow: hidden;
+}
+
+.datePickerCalendar :global(.react-datepicker__header) {
+  background: #ffffff !important;
+  border-bottom: none !important;
+  padding: 12px 0 !important;
+}
+
+.datePickerCalendar :global(.react-datepicker__current-month) {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 12px;
+}
+
+.datePickerCalendar :global(.react-datepicker__day-name) {
+  color: #6b7280;
+  font-weight: 500;
+  font-size: 12px;
+  text-transform: uppercase;
+  width: 40px !important;
+  height: 40px !important;
+  line-height: 40px !important;
+  margin: 2px !important;
+}
+
+.datePickerDay {
+  width: 40px !important;
+  height: 40px !important;
+  line-height: 40px !important;
+  margin: 2px !important;
+  border-radius: 12px !important;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1a1a1a;
+  transition: all 0.2s ease;
+}
+
+.datePickerCalendar :global(.react-datepicker__day):hover {
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border-radius: 12px !important;
+}
+
+.datePickerCalendar :global(.react-datepicker__day--selected) {
+  background: #1d4ed8 !important;
+  color: #ffffff !important;
+  font-weight: 600;
+  border-radius: 12px !important;
+}
+
+.datePickerCalendar :global(.react-datepicker__day--today) {
+  background: #dbeafe !important;
+  color: #1d4ed8 !important;
+  font-weight: 600;
+  border-radius: 12px !important;
+}
+
+.datePickerCalendar :global(.react-datepicker__day--disabled) {
+  color: #d1d5db !important;
+  cursor: not-allowed !important;
+}
+
+.datePickerCalendar :global(.react-datepicker__navigation) {
+  top: 16px !important;
+  width: 32px !important;
+  height: 32px !important;
+  background: #f3f4f6 !important;
+  border-radius: 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.2s ease !important;
+}
+
+.datePickerCalendar :global(.react-datepicker__navigation:hover) {
+  background: #e5e7eb !important;
+  transform: scale(1.05) !important;
+}
+
+.datePickerCalendar :global(.react-datepicker__navigation--previous) {
+  left: 16px !important;
+}
+
+.datePickerCalendar :global(.react-datepicker__navigation--next) {
+  right: 16px !important;
+}
+
+.datePickerCalendar :global(.react-datepicker__navigation-icon) {
+  width: 16px !important;
+  height: 16px !important;
+}
+
+.datePickerCalendar :global(.react-datepicker__navigation-icon::before) {
+  border-color: #374151 !important;
+  border-width: 2px 2px 0 0 !important;
+  width: 10px !important;
+  height: 10px !important;
+  top: 10px !important;
+  transition: border-color 0.2s ease !important;
+}
+
+.datePickerCalendar :global(.react-datepicker__navigation:hover .react-datepicker__navigation-icon::before) {
+  border-color: #1d4ed8 !important;
+}
+
+.datePickerCalendar :global(.react-datepicker__today-button) {
+  display: none !important;
+}
+
+.datePickerCalendar :global(.react-datepicker__year-dropdown),
+.datePickerCalendar :global(.react-datepicker__month-dropdown) {
+  background: #ffffff;
+  border: none !important;
+  border-radius: 12px !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15) !important;
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 12px 0 !important;
+  width: 140px !important;
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db #f3f4f6;
+}
+
+.datePickerCalendar :global(.react-datepicker__year-dropdown::-webkit-scrollbar),
+.datePickerCalendar :global(.react-datepicker__month-dropdown::-webkit-scrollbar) {
+  width: 6px;
+}
+
+.datePickerCalendar :global(.react-datepicker__year-dropdown::-webkit-scrollbar-thumb),
+.datePickerCalendar :global(.react-datepicker__month-dropdown::-webkit-scrollbar-thumb) {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.datePickerCalendar :global(.react-datepicker__year-option),
+.datePickerCalendar :global(.react-datepicker__month-option) {
+  padding: 10px 16px !important;
+  font-size: 15px !important;
+  font-weight: 500 !important;
+  color: #1a1a1a !important;
+  border-radius: 8px !important;
+  margin: 2px 8px !important;
+  transition: all 0.2s ease !important;
+}
+
+.datePickerCalendar :global(.react-datepicker__year-option:hover),
+.datePickerCalendar :global(.react-datepicker__month-option:hover) {
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+}
+
+.datePickerCalendar :global(.react-datepicker__year-option--selected),
+.datePickerCalendar :global(.react-datepicker__month-option--selected) {
+  background: #1d4ed8 !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+.selectedPreview {
+  margin-top: 20px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px 12px;
+  align-items: center;
+}
+
+.previewLabel {
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+}
+
+.previewValue {
+  font-size: 16px;
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+/* Подтверждение */
+.confirmation {
+  margin: 20px 0;
+}
+
+.finalSelection {
+  text-align: center;
+}
+
+.dateCard {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: white;
+  padding: 24px;
+  border-radius: 16px;
+  margin-bottom: 20px;
+}
+
+.dateLabel {
+  display: block;
+  font-size: 14px;
+  opacity: 0.9;
+  margin-bottom: 8px;
+}
+
+.dateRange {
+  display: block;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.dateDetails {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.dateDetail {
+  padding: 16px;
+  border: 1px solid #e1e5e9;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.detailLabel {
+  display: block;
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.detailValue {
+  display: block;
+  font-size: 16px;
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+/* Действия */
+.actions {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+  margin-top: 24px;
+  align-items: center;
+}
+
+.backButton {
+  padding: 12px 20px;
+  border: 1px solid #e1e5e9;
+  border-radius: 8px;
+  background: white;
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.backButton:hover {
+  background: #f8f9fa;
+  border-color: #ccc;
+}
+
+.skipButton {
+  padding: 12px 20px;
+  border: 1px solid #e1e5e9;
+  border-radius: 8px;
+  background: white;
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.skipButton:hover {
+  background: #f8f9fa;
+  border-color: #ccc;
+}
+
+.confirmButton {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  background: #007bff;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.confirmButton:hover:not(:disabled) {
+  background: #0056b3;
+  transform: translateY(-1px);
+}
+
+.confirmButton:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Анимации */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20 更新px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Адаптивность */
+@media (max-width: 480px) {
+  .popup {
+    padding: 24px 16px;
+  }
+  
+  .progress {
+    padding: 0 10px;
+  }
+  
+  .progress::before {
+    left: 10px;
+    right: 10px;
+  }
+  
+  .stepLabel {
+    font-size: 10px;
+  }
+  
+  .quickSelectionGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .dateDetails {
+    grid-template-columns: 1fr;
+  }
+  
+  .actions {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .backButton, .skipButton, .confirmButton {
+    width: 100%;
+  }
+  
+  .datePickerCalendar {
+    transform: scale(0.9);
+    transform-origin: center top;
+  }
+}
+
+/* Темная тема */
+[data-theme="dark"] .popup {
+  background: #1a1a1a;
+  color: white;
+}
+
+[data-theme="dark"] .title {
+  color: white;
+}
+
+[data-theme="dark"] .subtitle {
+  color: #ccc;
+}
+
+[data-theme="dark"] .progress::before {
+  background: #404040;
+}
+
+[data-theme="dark"] .stepNumber {
+  background: #2d2d2d;
+  border-color: #404040;
+  color: #ccc;
+}
+
+[data-theme="dark"] .stepLabel {
+  color: #ccc;
+}
+
+[data-theme="dark"] .rangeOption {
+  background: #2d2d2d;
+  border-color: #404040;
+  color: white;
+}
+
+[data-theme="dark"] .rangeTitle {
+  color: white;
+}
+
+[data-theme="dark"] .customOption {
+  background: #2d2d2d;
+  border-color: #404040;
+}
+
+[data-theme="dark"] .selectedPreview {
+  background: #2d2d2d;
+}
+
+[data-theme="dark"] .previewValue {
+  color: white;
+}
+
+[data-theme="dark"] .dateDetail {
+  background: #2d2d2d;
+  border-color: #404040;
+}
+
+[data-theme="dark"] .detailValue {
+  color: white;
+}
+
+[data-theme="dark"] .backButton,
+[data-theme="dark"] .skipButton {
+  background: #2d2d2d;
+  border-color: #404040;
+  color: #ccc;
+}
+
+[data-theme="dark"] .backButton:hover,
+[data-theme="dark"] .skipButton:hover {
+  background: #404040;
+}
+
+/* Темная тема для react-datepicker */
+[data-theme="dark"] .datePickerInput {
+  background: #2d2d2d;
+  border-color: #404040;
+  color: white;
+}
+
+[data-theme="dark"] .datePickerCalendar {
+  background: #1f2937 !important;
+  border: none !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3) !important;
+}
+
+[data-theme="dark"] .datePickerCalendar :global(.react-datepicker__header) {
+  background: #1f2937 !important;
+  border-bottom: none !important;
+}
+
+[data-theme="dark"] .datePickerCalendar :global(.react-datepicker__current-month) {
+  color: #f9fafb !important;
+}
+
+[data-theme="dark"] .datePickerCalendar :global(.react-datepicker__day-name) {
+  color: #9ca3af !important;
+}
+
+[data-theme="dark"] .datePickerCalendar :global(.react-datepicker__day) {
+  color: #f9fafb !important;
+}
+
+[data-theme="dark"] .datePickerCalendar :global(.react-datepicker__day):hover {
+  background: #374151 !important;
+  color: #93c5fd !important;
+}
+
+[data-theme="dark"] .datePickerCalendar :global(.react-datepicker__day--selected) {
+  background: #1d4ed8 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .datePickerCalendar :global(.react-datepicker__day--today) {
+  background: #1e3a8a !important;
+  color: #93c5fd !important;
+}
+
+[data-theme="dark"] .datePickerCalendar :global(.react-datepicker__day--disabled) {
+  color: #6b7280 !important;
+}
+
+[data-theme="dark"] .datePickerCalendar :global(.react-datepicker__navigation) {
+  background: #374151 !important;
+  border-radius: 8px !important;
+}
+
+[data-theme="dark"] .datePickerCalendar :global(.react-datepicker__navigation:hover) {
+  background: #4b5563 !important;
+}
+
+[data-theme="dark"] .datePickerCalendar :global(.react-datepicker__navigation-icon::before) {
+  border-color: #d1d5db !important;
+}
+
+[data-theme="dark"] .datePickerCalendar :global(.react-datepicker__navigation:hover .react-datepicker__navigation-icon::before) {
+  border-color: #93c5fd !important;
+}
+
+[data-theme="dark"] .datePickerCalendar :global(.react-datepicker__year-dropdown),
+[data-theme="dark"] .datePickerCalendar :global(.react-datepicker__month-dropdown) {
+  background: #1f2937 !important;
+  border: none !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3) !important;
+  color: #f9fafb !important;
+}
+
+[data-theme="dark"] .datePickerCalendar :global(.react-datepicker__year-option),
+[data-theme="dark"] .datePickerCalendar :global(.react-datepicker__month-option) {
+  color: #f9fafb !important;
+}
+
+[data-theme="dark"] .datePickerCalendar :global(.react-datepicker__year-option:hover),
+[data-theme="dark"] .datePickerCalendar :global(.react-datepicker__month-option:hover) {
+  background: #374151 !important;
+  color: #93c5fd !important;
+}
+
+[data-theme="dark"] .datePickerCalendar :global(.react-datepicker__year-option--selected),
+[data-theme="dark"] .datePickerCalendar :global(.react-datepicker__month-option--selected) {
+  background: #1d4ed8 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .datePickerCalendar :global(.react-datepicker__year-dropdown::-webkit-scrollbar-thumb),
+[data-theme="dark"] .datePickerCalendar :global(.react-datepicker__month-dropdown::-webkit-scrollbar-thumb) {
+  background: #6b7280;
+}
+
+.triggerButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.triggerButton:hover {
+  transform: translateY(-2px);
+}
+
+.triggerButton:active {
+  transform: translateY(2px);
+}
+
+.imageWrapper {
+  position: relative;
+  width: 60%;
+  height: 60%;
+}
+
+/* Темная тема */
+[data-theme="dark"] .triggerButton {
+  background: var(--button-bg-color);
+}
+
+/* Кастомный заголовок календаря */
+.customHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px 12px 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #e1e5e9;
+}
+
+.navButton {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: #f8f9fa;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 16px;
+  color: #374151;
+}
+
+.navButton:hover:not(:disabled) {
+  background: #007bff;
+  color: white;
+  transform: scale(1.05);
+}
+
+.navButton:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.navIcon {
+  font-size: 18px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.monthYearContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  justify-content: center;
+}
+
+.monthSelect,
+.yearSelect {
+  padding: 6px 10px;
+  border: 1px solid #e1e5e9;
+  border-radius: 6px;
+  background: white;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1a1a1a;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'><path fill='%23666' d='M2 0L0 2h4zm0 5L0 3h4z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 8px;
+  padding-right: 24px;
+}
+
+.monthSelect:hover,
+.yearSelect:hover {
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+}
+
+.monthSelect:focus,
+.yearSelect:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2);
+}
+
+/* Скрытие стандартных dropdown-ов */
+.datePickerCalendar :global(.react-datepicker__year-dropdown-container),
+.datePickerCalendar :global(.react-datepicker__month-dropdown-container) {
+  display: none !important;
+}
+
+/* Улучшенные стили для выпадающих списков */
+.datePickerCalendar :global(.react-datepicker__year-select),
+.datePickerCalendar :global(.react-datepicker__month-select) {
+  display: none !important;
+}
+
+/* Темная тема для кастомного заголовка */
+[data-theme="dark"] .customHeader {
+  border-bottom-color: #404040;
+}
+
+[data-theme="dark"] .navButton {
+  background: #374151;
+  color: #f9fafb;
+}
+
+[data-theme="dark"] .navButton:hover:not(:disabled) {
+  background: #007bff;
+  color: white;
+}
+
+[data-theme="dark"] .monthSelect,
+[data-theme="dark"] .yearSelect {
+  background: #2d2d2d;
+  border-color: #404040;
+  color: white;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'><path fill='%23ccc' d='M2 0L0 2h4zm0 5L0 3h4z'/></svg>");
+}
+
+[data-theme="dark"] .monthSelect:hover,
+[data-theme="dark"] .yearSelect:hover {
+  border-color: #007bff;
+}
+
+.quickSelection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.rangeOption {
+  padding: 16px;
+  border: 2px solid #e1e5e9;
+  border-radius: 12px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  width: 100%;
+}
+
+.rangeOption:hover {
+  border-color: #007bff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.1);
+}
+
+.rangeTitle {
+  display: block;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+}
+
+.rangeDescription {
+  display: block;
+  font-size: 12px;
+  color: #666;
+}
+
+/* Выбор региона */
+.regionSelection {
+  margin-bottom: 20px;
+  padding: 16px;
+  border: 1px solid #e1e5e9;
+  border-radius: 12px;
+  background: #f8f9fa;
+}
+
+.regionLabel {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 8px;
+}
+
+.regionSelect {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  background: white;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1a1a1a;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'><path fill='%23666' d='M2 0L0 2h4zm0 5L0 3h4z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  background-size: 10px;
+  padding-right: 40px;
+}
+
+.regionSelect:hover {
+  border-color: #007bff;
+}
+
+.regionSelect:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.regionDescription {
+  font-size: 12px;
+  color: #666;
+  margin-top: 6px;
+}
+
+/* Карточка региона на этапе подтверждения */
+.regionCard {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: white;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.regionCardLabel {
+  display: block;
+  font-size: 14px;
+  opacity: 0.9;
+  margin-bottom: 6px;
+}
+
+.regionCardValue {
+  display: block;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* Темная тема для региона */
+[data-theme="dark"] .regionSelection {
+  background: #2d2d2d;
+  border-color: #404040;
+}
+
+[data-theme="dark"] .regionLabel {
+  color: white;
+}
+
+[data-theme="dark"] .regionSelect {
+  background: #2d2d2d;
+  border-color: #404040;
+  color: white;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'><path fill='%23ccc' d='M2 0L0 2h4zm0 5L0 3h4z'/></svg>");
+}
+
+[data-theme="dark"] .regionDescription {
+  color: #ccc;
+}
+
+/* Стили для выбранной опции быстрого выбора */
+.rangeOptionSelected {
+  border-color: #007bff !important;
+  background: #f0f8ff !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15) !important;
+}
+
+.rangeOptionSelected .rangeTitle {
+  color: #007bff !important;
+}
+
+.regionSelection {
+  margin-bottom: 20px;
+}
+
+.regionLabel {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 8px;
+}
+
+.regionSelectWrapper {
+  position: relative;
+  width: 100%;
+}
+
+.regionSelect {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e1e5e9;
+  border-radius: 12px;
+  background: white;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1a1a1a;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  appearance: none;
+  padding-right: 48px;
+}
+
+.regionSelect:hover {
+  border-color: #007bff;
+}
+
+.regionSelect:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.regionSelectArrow {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: #666;
+  font-size: 12px;
+  transition: transform 0.2s ease;
+}
+
+.regionSelect:focus + .regionSelectArrow {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+.regionDescription {
+  font-size: 12px;
+  color: #666;
+  margin-top: 6px;
+}
+
+/* Кастомный dropdown для регионов */
+.regionDropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border-radius: 0 0 12px 12px;
+  margin-top: 0;
+  max-height: 0;
+  overflow-y: hidden;
+  z-index: 100;
+  border: 1px solid transparent;
+  border-top: none;
+  transition: all 0.3s ease;
+  opacity: 0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  
+  /* Скрытие скроллбара для всех браузеров */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE и Edge */
+}
+
+.regionDropdownOpen {
+  max-height: 200px;
+  overflow-y: auto;
+  border-color: #e1e5e9;
+  opacity: 1;
+}
+
+.regionDropdownItem {
+  padding: 12px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s ease;
+  font-size: 14px;
+  background: white;
+  color: #1a1a1a;
+}
+
+.regionDropdownItem:hover {
+  background-color: #f8f9fa;
+}
+
+.regionDropdownItem:last-child {
+  border-bottom: none;
+}
+
+.regionDropdownItemSelected {
+  background-color: #007bff;
+  color: white;
+}
+
+.regionDropdownItemSelected:hover {
+  background-color: #0056b3;
+}
+
+/* Контейнер для кастомного селекта */
+.customSelectContainer {
+  position: relative;
+  width: 100%;
+}
+
+.customSelectTrigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border: 2px solid #e1e5e9;
+  border-radius: 12px;
+  background: white;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1a1a1a;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.customSelectTrigger:hover {
+  border-color: #007bff;
+}
+
+.customSelectTriggerOpen {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-color: #007bff;
+}
+
+.customSelectValue {
+  flex: 1;
+  text-align: left;
+}
+
+.customSelectArrow {
+  transition: transform 0.2s ease;
+  color: #666;
+}
+
+.customSelectArrowOpen {
+  transform: rotate(180deg);
+}
+
+/* Темная тема для региона */
+[data-theme="dark"] .regionSelect {
+  background: #2d2d2d;
+  border-color: #404040;
+  color: white;
+}
+
+[data-theme="dark"] .regionSelectArrow {
+  color: #ccc;
+}
+
+[data-theme="dark"] .regionDropdown {
+  background: #2d2d2d;
+  border-color: #404040;
+}
+
+[data-theme="dark"] .regionDropdownItem {
+  background: #2d2d2d;
+  color: white;
+  border-bottom-color: #404040;
+}
+
+[data-theme="dark"] .regionDropdownItem:hover {
+  background-color: #404040;
+}
+
+[data-theme="dark"] .regionDropdownItemSelected {
+  background-color: #007bff;
+  color: white;
+}
+
+[data-theme="dark"] .customSelectTrigger {
+  background: #2d2d2d;
+  border-color: #404040;
+  color: white;
+}
+
+[data-theme="dark"] .customSelectArrow {
+  color: #ccc;
+}

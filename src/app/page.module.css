@@ -1,0 +1,289 @@
+.container{
+    position: fixed;
+    top: 0;
+    left: 0;
+    padding: 0;
+    margin: 0;
+    width: 100vw;
+    height: 100svh;
+    height: 100dvh;
+    height: 100lvh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    box-sizing: border-box;
+    background-color: var(--bg-color);
+}
+
+.container::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: env(safe-area-inset-top);
+    background-color: var(--safe-area-bg);
+    z-index: 1000;
+}
+
+.Map{
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+.overlayContent {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    pointer-events: none;
+    padding: 24px; /* Добавляем паддинг для всего контента */
+    box-sizing: border-box;
+}
+
+.drawerOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.drawerOverlay.fadeOut {
+  animation: fadeOut 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.LeftSearchBar,
+.iconsContainer {
+    pointer-events: none;
+}
+
+/* И включаем pointer-events только для кликабельных элементов */
+.searchFilter,
+.icons {
+    pointer-events: auto;
+}
+
+.LeftSearchBar{
+    width: 100%; /* Теперь 100% без calc */
+    border-radius: 12px;
+    margin: 0; /* Убираем марджин, т.к. паддинг уже в overlayContent */
+    height: 48px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+
+}
+
+.searchFilter{
+  display: flex;
+  flex-direction: row;  
+    gap: 24px;
+}
+
+.iconsContainer{
+    margin-top: auto;
+    margin-bottom: 0; /* Убираем марджин, т.к. паддинг уже в overlayContent */
+    display: flex;
+    justify-content: space-between;
+    width: 100%; /* Добавляем 100% ширину */
+}
+
+.icons{
+    display: flex;
+    align-items: end;
+}
+
+/* Добавляем стили для панели пользователя */
+.userPanel {
+    /* position: absolute; */
+    top: 60px;
+    right: 20px;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: var(--button-bg-color);
+    padding: 8px 8px;
+    border-radius: 8px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    pointer-events: auto;
+}
+
+.userInfo {
+    font-size: 14px;
+    color: #333;
+    font-weight: 500;
+}
+
+.logoutButton {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background 0.3s;
+}
+
+.logoutButton:hover {
+    background: #c82333;
+}
+
+.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-size: 18px;
+    color: #333;
+}
+
+.PlusMinusReset{
+    display: flex;
+    flex-direction: column;
+    justify-content: end;
+    gap: 24px;
+    align-items: flex-end;
+
+}
+
+@media (max-width: 768px) {
+    .container {
+        height: 100svh;
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+    
+    .overlayContent {
+        padding: 20px; /* Меньше паддинг на мобилках */
+    }
+    
+    .LeftSearchBar {
+        width: 100%; /* Все еще 100% */
+        margin: 0;
+    }
+    
+    .iconsContainer {
+        margin: 0;
+        margin-top: auto;
+        width: 100%;
+    }
+    
+    .Map {
+        width: 100%;
+        height: 100%;
+    }
+
+    .searchFilter{
+        gap: 16px;
+    }
+
+    /* Адаптивные стили для панели пользователя */
+    .userPanel {
+        top: 10px;
+        right: 10px;
+        padding: 8px 12px;
+        gap: 10px;
+    }
+
+    .userInfo {
+        font-size: 12px;
+    }
+
+    .logoutButton {
+        padding: 6px 10px;
+        font-size: 11px;
+    }
+
+}
+
+@media (max-width: 380px) and (max-height: 700px) {
+    .overlayContent {
+        padding: 12px; /* Еще меньше паддинг на маленьких экранах */
+    }
+
+    .userPanel {
+        top: 8px;
+        right: 8px;
+        padding: 6px 10px;
+    }
+
+    .userInfo {
+        font-size: 11px;
+    }
+}
+
+
+.logoutOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+/* Можно использовать существующий спиннер, если он уже есть в файле */
+/* Если нет, добавьте: */
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Стиль для отключенной кнопки выхода */
+.logoutButton:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.logoutButton:disabled:hover {
+  background: #6c757d;
+}

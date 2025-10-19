@@ -1,0 +1,17 @@
+.container{
+    display: flex;
+    padding: 7px 16px;
+    background-color: var(--bg-color);
+    border-radius: 12px;
+    position: relative;
+    align-items: center;
+    width: 100%;
+}
+
+.input{
+    border: none;
+    background: none;
+    outline: none; 
+    width: 100%; 
+    font-size: 24px; 
+}

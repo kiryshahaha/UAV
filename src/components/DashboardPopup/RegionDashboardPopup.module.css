@@ -1,0 +1,456 @@
+/* components/DashboardPopup/RegionDashboardPopup.module.css */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.3s ease-out;
+  padding: 16px;
+}
+
+.popup {
+  background: #EDF5FF;
+  border-radius: 28px;
+  padding: 30px;
+  width: 100%;
+  max-width: 1200px;
+  height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s ease-out;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 12px;
+  background-color: white;
+  padding: 20px;
+}
+
+.title {
+  color: #000;
+  font-size: 24px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.subtitle {
+  color: #666;
+  font-size: 16px;
+  margin: 4px 0 0 0;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+  font-size: 24px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.closeButton:hover {
+  background-color: #f5f5f5;
+}
+
+/* Main Layout */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Total Stats */
+.totalStats {
+  display: flex;
+  justify-content: space-around;
+  padding: 20px;
+  border-radius: 16px;
+  background-color: white;
+  border-radius: 12px;
+}
+
+.totalStatItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.totalStatValue {
+  color: #34C759;
+  font-weight: bold;
+  font-size: 32px;
+}
+
+.totalStatLabel {
+  color: #666;
+  font-size: 14px;
+}
+
+/* Stats Grid */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.statCard {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.statCard h3 {
+  margin: 0 0 16px 0;
+  color: #1f2937;
+  font-size: 18px;
+}
+
+.statValue {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.statDescription {
+  color: #6b7280;
+  font-size: 14px;
+  margin: 0;
+}
+
+/* Chart Section */
+.chartSection {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.chartContainer {
+  height: 300px;
+  margin-bottom: 16px;
+}
+
+.chartLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #f8fafc;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.legendColor {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+.legendLabel {
+  font-weight: 600;
+}
+
+.legendPercentage {
+  color: #34C759;
+  font-weight: bold;
+}
+
+/* UAV Types Section */
+.uavSection {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.uavList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.uavItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 8px;
+}
+
+.uavDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.uavName {
+  flex: 1;
+  font-weight: 500;
+  min-width: 140px;
+}
+
+.uavBarContainer {
+  flex: 2;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.uavBar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.uavPercentage {
+  min-width: 40px;
+  text-align: right;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* Operators Section */
+.operatorsSection {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.operatorsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.operatorCard {
+  background: #f8fafc;
+  padding: 16px;
+  border-radius: 8px;
+  border-left: 4px solid #34C759;
+}
+
+.operatorName {
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.operatorDetails {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #666;
+}
+
+/* Yearly Stats */
+.yearlySection {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.yearsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.yearCard {
+  background: #f8fafc;
+  padding: 16px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.yearValue {
+  font-size: 24px;
+  font-weight: bold;
+  color: #34C759;
+  margin-bottom: 4px;
+}
+
+.yearLabel {
+  font-size: 12px;
+  color: #666;
+}
+
+/* Loading State */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #6b7280;
+}
+
+.loadingContent {
+  text-align: center;
+}
+
+.loadingIcon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+/* Unit Styles */
+.unitSmall {
+  font-size: 14px;
+  font-weight: normal;
+  margin-left: 2px;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Color Utilities */
+.colorBlue { color: #3b82f6; }
+.colorGreen { color: #10b981; }
+.colorOrange { color: #f59e0b; }
+.colorPurple { color: #8b5cf6; }
+.colorRed { color: #ef4444; }
+
+.bgBlue { background-color: #3b82f6; }
+.bgGreen { background-color: #10b981; }
+.bgOrange { background-color: #f59e0b; }
+.bgPurple { background-color: #8b5cf6; }
+.bgRed { background-color: #ef4444; }
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+  .overlay {
+    padding: 8px;
+    align-items: flex-start;
+  }
+
+  .popup {
+    height: 90vh;
+    padding: 20px;
+    border-radius: 20px;
+    gap: 16px;
+  }
+
+  .title {
+    font-size: 20px;
+  }
+
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .totalStats {
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+  }
+
+  .totalStatValue {
+    font-size: 24px;
+  }
+
+  .chartContainer {
+    height: 200px;
+  }
+
+  .operatorsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .yearsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .uavName {
+    min-width: 100px;
+    font-size: 12px;
+  }
+
+  .uavPercentage {
+    font-size: 12px;
+    min-width: 30px;
+  }
+
+  .statValue {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .popup {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .title {
+    font-size: 18px;
+  }
+
+  .yearsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .totalStatValue {
+    font-size: 20px;
+  }
+
+  .chartContainer {
+    height: 180px;
+  }
+
+  .legendItem {
+    font-size: 10px;
+    padding: 4px 8px;
+  }
+}
