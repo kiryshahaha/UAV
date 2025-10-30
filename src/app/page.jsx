@@ -1,4 +1,3 @@
-// page.jsx
 "use client";
 import { useRef, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
@@ -122,7 +121,6 @@ const { tableVersion } = useTable();
     setShowRegionOperators(true);
   }, []);
 
-  // Добавьте обработчик для закрытия попапа операторов региона
   const handleCloseRegionOperators = useCallback(() => {
     setShowRegionOperators(false);
     setSelectedOperatorsRegion(null);
@@ -186,7 +184,6 @@ const { tableVersion } = useTable();
     setShowRegionDashboard(true);
 
     try {
-      // Используем существующий эндпоинт с фильтром по региону
       const API_URL = process.env.NEXT_PUBLIC_API_URL;
       
       // Строим URL с параметром региона
@@ -256,13 +253,11 @@ const { tableVersion } = useTable();
 
   const handleTableSelect = useCallback((tableName) => {
     console.log("Таблица выбрана в page.jsx:", tableName);
-    // tableVersion теперь управляется контекстом
   }, []);
 
 
   const handleTablesUpdate = useCallback(() => {
     console.log("Список таблиц обновлен");
-    // Можно добавить дополнительную логику обновления если нужно
   }, []);
 
   // Мемоизируем обработчики
@@ -310,7 +305,6 @@ const { tableVersion } = useTable();
     }
   }, []);
 
-  // Выносим стабильные функции из useEffect
   const checkUser = useCallback(async () => {
     try {
       const {
@@ -419,7 +413,6 @@ const { tableVersion } = useTable();
     handleCloseDrawer();
   }, [handleCloseDrawer]);
 
-  // Получаем текст для кнопки триггера
   const getDatePickerTriggerText = useCallback(() => {
     if (!filters.dateRange && !filters.region) {
       return "Выберите период";
@@ -470,7 +463,7 @@ const { tableVersion } = useTable();
           dateRange={filters.dateRange || null}
           selectedRegion={filters.region || null}
           onShowRegionOperators={handleShowRegionOperators}
-          tableVersion={tableVersion} // Передаем версию таблицы
+          tableVersion={tableVersion} 
         />
       </div>
 

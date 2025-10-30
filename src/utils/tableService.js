@@ -1,4 +1,3 @@
-// utils/tableService.js
 const API_BASE = '/api';
 
 const getSessionId = () => {

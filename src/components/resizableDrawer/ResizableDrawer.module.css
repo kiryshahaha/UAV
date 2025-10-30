@@ -1,4 +1,3 @@
-/* components/ResizableDrawer.module.css */
 .drawer {
   position: fixed;
   top: 0;
@@ -9,7 +8,7 @@
   z-index: 1000;
   transition: transform 0.3s ease-out;
   transform: translateX(0);
-  overflow: hidden; /* Добавляем чтобы drawer не прокручивался */
+  overflow: hidden; 
 }
 
 .drawer.hidden {

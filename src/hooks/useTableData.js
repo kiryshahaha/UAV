@@ -1,4 +1,3 @@
-// hooks/useTableData.js
 import { useState, useEffect } from 'react';
 import { useTable } from '@/contexts/TableContext';
 

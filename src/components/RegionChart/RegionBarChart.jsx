@@ -1,4 +1,3 @@
-// components/RegionBarChart.jsx
 import React, { useState, useEffect, memo } from 'react';
 import { Bar } from 'react-chartjs-2';
 import {

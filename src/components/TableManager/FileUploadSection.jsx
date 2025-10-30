@@ -1,4 +1,3 @@
-// components/TableManager/FileUploadSection.jsx
 import React, { useState } from "react";
 import styles from "./TableManager.module.css";
 import { tableService } from "@/utils/tableService";

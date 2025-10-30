@@ -1,4 +1,3 @@
-// components/DashboardPopup/DashboardPopup.jsx
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
@@ -16,7 +15,6 @@ import { Bar } from 'react-chartjs-2';
 import styles from "./DashboardPopup.module.css";
 import { useTable } from "@/contexts/TableContext";
 
-// Регистрируем компоненты Chart.js
 ChartJS.register(
     CategoryScale,
     LinearScale,
@@ -33,7 +31,7 @@ const DashboardPopup = ({ isOpen, onClose, dateRange, selectedRegion, darkMode =
     const [isMobile, setIsMobile] = useState(false);
     const popupRef = useRef(null);
 
-   const { tableVersion, currentTable } = useTable();
+    const { tableVersion, currentTable } = useTable();
 
     // Определяем мобильное устройство
     useEffect(() => {
@@ -49,53 +47,52 @@ const DashboardPopup = ({ isOpen, onClose, dateRange, selectedRegion, darkMode =
         };
     }, []);
 
-    // Загружаем данные дашборда
-      useEffect(() => {
-    if (!isOpen || !currentTable) return;
 
-    const fetchDashboardData = async () => {
-  setLoading(true);
-  setError(null);
+    useEffect(() => {
+        if (!isOpen || !currentTable) return;
 
-  try {
-    console.log("🔄 Загрузка дашборда для таблицы:", currentTable?.table_name);
-    
-    const params = new URLSearchParams();
-    if (dateRange?.date_from) params.append('date_from', dateRange.date_from);
-    if (dateRange?.date_to) params.append('date_to', dateRange.date_to);
-    if (selectedRegion) params.append('region', selectedRegion);
-    
-    // Добавляем информацию о таблице
-    params.append('_v', tableVersion);
-    params.append('_t', Date.now());
+        const fetchDashboardData = async () => {
+            setLoading(true);
+            setError(null);
 
-    const sessionId = localStorage.getItem('session_id');
-    const headers = {};
-    
-    if (sessionId) {
-      headers['X-Session-ID'] = sessionId;
-    }
+            try {
+                console.log("🔄 Загрузка дашборда для таблицы:", currentTable?.table_name);
 
-    const response = await fetch(`/api/dashboard/stats?${params.toString()}`, {
-      headers: headers
-    });
+                const params = new URLSearchParams();
+                if (dateRange?.date_from) params.append('date_from', dateRange.date_from);
+                if (dateRange?.date_to) params.append('date_to', dateRange.date_to);
+                if (selectedRegion) params.append('region', selectedRegion);
 
-    if (!response.ok) {
-      throw new Error('Ошибка загрузки данных дашборда');
-    }
+                params.append('_v', tableVersion);
+                params.append('_t', Date.now());
 
-    const data = await response.json();
-    setDashboardData(data);
-  } catch (err) {
-    console.error('Ошибка загрузки дашборда:', err);
-    setError(err.message);
-  } finally {
-    setLoading(false);
-  }
-};
+                const sessionId = localStorage.getItem('session_id');
+                const headers = {};
 
-    fetchDashboardData();
-  }, [isOpen, dateRange, selectedRegion, tableVersion, currentTable]);
+                if (sessionId) {
+                    headers['X-Session-ID'] = sessionId;
+                }
+
+                const response = await fetch(`/api/dashboard/stats?${params.toString()}`, {
+                    headers: headers
+                });
+
+                if (!response.ok) {
+                    throw new Error('Ошибка загрузки данных дашборда');
+                }
+
+                const data = await response.json();
+                setDashboardData(data);
+            } catch (err) {
+                console.error('Ошибка загрузки дашборда:', err);
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchDashboardData();
+    }, [isOpen, dateRange, selectedRegion, tableVersion, currentTable]);
 
     // Обработчик клика вне попапа
     useEffect(() => {
@@ -154,13 +151,11 @@ const DashboardPopup = ({ isOpen, onClose, dateRange, selectedRegion, darkMode =
         return <>{mins}<span className={styles.unitSmall}>мин</span></>;
     };
 
-    // Подготовка данных для гистограммы операторов
     const getOperatorsChartData = () => {
         if (!dashboardData?.operators || dashboardData.operators.length === 0) {
             return null;
         }
 
-        // Группируем операторов по типам
         const operatorTypes = {
             'ООО': 0,
             'ИП': 0,
@@ -505,7 +500,7 @@ const DashboardPopup = ({ isOpen, onClose, dateRange, selectedRegion, darkMode =
                                 <div className={styles.uavList}>
                                     {dashboardData.aircraft_types?.slice(0, isMobile ? 2 : 3).map((type, index) => {
                                         const totalFlights = dashboardData.general_stats?.total_flights || 0;
-                                        const percentage = totalFlights > 0 
+                                        const percentage = totalFlights > 0
                                             ? Math.round((type.count / totalFlights) * 100)
                                             : 0;
 

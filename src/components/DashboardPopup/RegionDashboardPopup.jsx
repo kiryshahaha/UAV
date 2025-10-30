@@ -1,4 +1,3 @@
-// components/DashboardPopup/RegionDashboardPopup.jsx
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -15,7 +14,6 @@ import { Bar } from 'react-chartjs-2';
 import styles from './RegionDashboardPopup.module.css';
 import { useTable } from "@/contexts/TableContext"
 
-// Регистрируем компоненты Chart.js
 ChartJS.register(
     CategoryScale,
     LinearScale,
@@ -36,38 +34,37 @@ const RegionDashboardPopup = ({ isOpen, onClose, dateRange, regionName }) => {
         const checkMobile = () => {
             setIsMobile(window.innerWidth <= 768);
         };
-        
+
         checkMobile();
         window.addEventListener('resize', checkMobile);
-        
+
         return () => {
             window.removeEventListener('resize', checkMobile);
         };
     }, []);
 
     // Загружаем данные для конкретного региона
-        useEffect(() => {
-        if (!isOpen || !regionName || !currentTable) return; // Добавлена проверка на currentTable
+    useEffect(() => {
+        if (!isOpen || !regionName || !currentTable) return; 
 
         const fetchRegionData = async () => {
             setLoading(true);
             setError(null);
-            
+
             try {
                 console.log("🔄 Загрузка данных для региона:", regionName);
-                
+
                 const params = new URLSearchParams();
                 if (dateRange?.date_from) params.append('date_from', dateRange.date_from);
                 if (dateRange?.date_to) params.append('date_to', dateRange.date_to);
                 params.append('region', regionName);
-                
-                // Добавляем информацию о таблице
+
                 params.append('_v', tableVersion);
                 params.append('_t', Date.now());
 
                 const sessionId = localStorage.getItem('session_id');
                 const headers = {};
-                
+
                 if (sessionId) {
                     headers['X-Session-ID'] = sessionId;
                 }
@@ -75,7 +72,7 @@ const RegionDashboardPopup = ({ isOpen, onClose, dateRange, regionName }) => {
                 const response = await fetch(`/api/dashboard/stats?${params.toString()}`, {
                     headers: headers
                 });
-                
+
                 if (!response.ok) {
                     throw new Error('Ошибка загрузки данных региона');
                 }
@@ -257,8 +254,8 @@ const RegionDashboardPopup = ({ isOpen, onClose, dateRange, regionName }) => {
                     {error && (
                         <div className={styles.error}>
                             <p>Ошибка: {error}</p>
-                            <button 
-                                onClick={() => window.location.reload()} 
+                            <button
+                                onClick={() => window.location.reload()}
                                 className={styles.retryButton}
                             >
                                 Попробовать снова
@@ -386,12 +383,12 @@ const RegionDashboardPopup = ({ isOpen, onClose, dateRange, regionName }) => {
                                     <div className={styles.uavList}>
                                         {dashboardData.aircraft_types.slice(0, 8).map((type, index) => {
                                             const totalFlights = dashboardData.general_stats?.total_flights || 0;
-                                            const percentage = totalFlights > 0 ? 
+                                            const percentage = totalFlights > 0 ?
                                                 Math.round((type.count / totalFlights) * 100) : 0;
-                                            
+
                                             return (
                                                 <div key={index} className={styles.uavItem}>
-                                                    <div 
+                                                    <div
                                                         className={styles.uavDot}
                                                         style={{ backgroundColor: getColorByIndex(index) }}
                                                     ></div>

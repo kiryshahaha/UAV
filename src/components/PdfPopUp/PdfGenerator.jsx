@@ -1,4 +1,3 @@
-// src/components/PdfPopUp/PdfGenerator.jsx
 "use client";
 
 import { useState, useEffect, useRef } from "react";

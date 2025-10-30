@@ -1,4 +1,3 @@
-// components/DatePickerPopup/DatePickerTrigger.jsx
 "use client";
 
 import Image from "next/image";

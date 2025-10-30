@@ -1,4 +1,3 @@
-// FileUploadModal.jsx
 import React, { useState } from "react";
 import Image from "next/image";
 import styles from "./FileUploadModal.module.css";
@@ -7,7 +6,7 @@ import { tableService } from "@/utils/tableService";
 const FileUploadModal = ({ isOpen, onClose, user, onTablesUpdate }) => {
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [uploadType, setUploadType] = useState('new'); // 'new' или 'append'
+  const [uploadType, setUploadType] = useState('new'); 
 
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];

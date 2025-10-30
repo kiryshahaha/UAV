@@ -1,4 +1,3 @@
-// hooks/useTimeBounds.js
 import { useState, useEffect } from 'react';
 import { useTable } from '@/contexts/TableContext';
 
@@ -12,7 +11,6 @@ export function useTimeBounds() {
 
   useEffect(() => {
     const fetchTimeBounds = async () => {
-      // Если таблица не загружена, не делаем запрос
       if (!currentTable) {
         console.log("⏳ Таблица не загружена, ожидаем...");
         setLoading(true);

@@ -11,11 +11,10 @@
     transition: all 0.3s ease;
 }
 
-/* Контейнер для изображения */
 .imageWrapper {
     position: relative;
-    width: 60%; /* Регулируй по необходимости */
-    height: 60%; /* Регулируй по необходимости */
+    width: 60%; 
+    height: 60%; 
 }
 
 .icon:hover{

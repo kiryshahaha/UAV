@@ -1,4 +1,3 @@
-// components/TableManager/TableManager.jsx
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import styles from "./TableManager.module.css";

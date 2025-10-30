@@ -1,4 +1,3 @@
-// RegionPopup.jsx
 "use client";
 
 import React from "react";
@@ -48,7 +47,7 @@ const RegionPopup = ({
         regionName={regionName} 
         onShowStatistics={onShowStatistics}
         onShowDashboard={onShowDashboard}
-        onShowOperators={onShowOperators} // Передаем пропс
+        onShowOperators={onShowOperators}
       />
     </div>
   );

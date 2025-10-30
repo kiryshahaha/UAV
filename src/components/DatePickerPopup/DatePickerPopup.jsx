@@ -25,15 +25,13 @@ const DatePickerPopup = ({ isOpen, onClose, onDateSelect }) => {
   const [isLoadingRegions, setIsLoadingRegions] = useState(false);
   const regionDropdownRef = useRef(null);
 
-  // Используем хук для получения временных границ
   const { timeBounds, loading: timeBoundsLoading } = useTimeBounds();
 
   // Получаем динамические даты на основе реальных данных
   const getDynamicDates = () => {
     const today = new Date();
-    
+
     if (!timeBounds) {
-      // Fallback если границы еще не загружены
       return {
         today,
         currentYear: today.getFullYear(),
@@ -70,7 +68,7 @@ const DatePickerPopup = ({ isOpen, onClose, onDateSelect }) => {
         if (response.ok) {
           const data = await response.json();
           const regionsData = data.regions || data.cities || [];
-          
+
           const formattedRegions = [
             { value: "all", label: "Все регионы" },
             ...regionsData.map(region => ({
@@ -78,7 +76,7 @@ const DatePickerPopup = ({ isOpen, onClose, onDateSelect }) => {
               label: region.name_ru || region.name_en || String(region)
             }))
           ];
-          
+
           setRegions(formattedRegions);
           console.log("✅ Регионы загружены:", formattedRegions.length);
         } else {
@@ -121,7 +119,7 @@ const DatePickerPopup = ({ isOpen, onClose, onDateSelect }) => {
       setCurrentStep("range");
       setQuickSelectionType(null);
       setIsRegionDropdownOpen(false);
-      
+
       const hasPreference = localStorage.getItem("hasDatePreference");
       setIsFirstTime(!hasPreference);
 
@@ -177,7 +175,7 @@ const DatePickerPopup = ({ isOpen, onClose, onDateSelect }) => {
   // Шаг 1: Выбор типа диапазона
   const handleRangeTypeSelect = (type) => {
     const dates = getDynamicDates();
-    
+
     switch (type) {
       case "currentYear":
         setSelectedRange({
@@ -197,7 +195,7 @@ const DatePickerPopup = ({ isOpen, onClose, onDateSelect }) => {
       default:
         return;
     }
-    
+
     setQuickSelectionType(type);
   };
 
@@ -206,14 +204,14 @@ const DatePickerPopup = ({ isOpen, onClose, onDateSelect }) => {
       const dateFrom = selectedRange.from ? format(selectedRange.from, "yyyy-MM-dd") : null;
       const dateTo = selectedRange.to ? format(selectedRange.to, "yyyy-MM-dd") : null;
       const regionToSave = selectedRegion === "all" ? null : selectedRegion;
-      
+
       localStorage.setItem("userDateRangePreference", JSON.stringify({
         date_from: dateFrom,
         date_to: dateTo
       }));
       localStorage.setItem("hasDatePreference", "true");
       localStorage.setItem("userRegionPreference", regionToSave || "");
-      
+
       setCurrentStep("confirm");
     }
   };
@@ -270,7 +268,7 @@ const DatePickerPopup = ({ isOpen, onClose, onDateSelect }) => {
 
   const handleConfirm = () => {
     const dates = getDynamicDates();
-    
+
     if (selectedRange.from && isAfter(selectedRange.from, dates.today)) {
       alert("Нельзя выбрать будущую дату");
       return;
@@ -282,7 +280,7 @@ const DatePickerPopup = ({ isOpen, onClose, onDateSelect }) => {
 
     const dateFrom = selectedRange.from ? format(selectedRange.from, "yyyy-MM-dd") : null;
     const dateTo = selectedRange.to ? format(selectedRange.to, "yyyy-MM-dd") : null;
-    
+
     localStorage.setItem("userDateRangePreference", JSON.stringify({
       date_from: dateFrom,
       date_to: dateTo
@@ -291,7 +289,7 @@ const DatePickerPopup = ({ isOpen, onClose, onDateSelect }) => {
 
     const regionToSave = selectedRegion === "all" ? null : selectedRegion;
     localStorage.setItem("userRegionPreference", regionToSave || "");
-    
+
     onDateSelect({
       date_from: dateFrom,
       date_to: dateTo,
@@ -315,15 +313,15 @@ const DatePickerPopup = ({ isOpen, onClose, onDateSelect }) => {
     if (!selectedRange.from && !selectedRange.to) {
       return "Дата не выбрана";
     }
-    
+
     if (selectedRange.from && selectedRange.to) {
       return `${format(selectedRange.from, "d MMM yyyy", { locale: ru })} - ${format(selectedRange.to, "d MMM yyyy", { locale: ru })}`;
     }
-    
+
     if (selectedRange.from) {
       return `С ${format(selectedRange.from, "d MMM yyyy", { locale: ru })}`;
     }
-    
+
     if (selectedRange.to) {
       return `По ${format(selectedRange.to, "d MMM yyyy", { locale: ru })}`;
     }
@@ -347,8 +345,8 @@ const DatePickerPopup = ({ isOpen, onClose, onDateSelect }) => {
   const getStepSubtitle = () => {
     switch (currentStep) {
       case "range":
-        return isFirstTime 
-          ? "Выберите готовый диапазон или настройте вручную" 
+        return isFirstTime
+          ? "Выберите готовый диапазон или настройте вручную"
           : "Измените период или выберите новый";
       case "start":
         return "Укажите дату начала периода";
@@ -370,7 +368,7 @@ const DatePickerPopup = ({ isOpen, onClose, onDateSelect }) => {
   // Получение описания быстрого выбора
   const getQuickSelectionDescription = () => {
     const dates = getDynamicDates();
-    
+
     switch (quickSelectionType) {
       case "allTime":
         return `Весь период с ${format(dates.allTimeStart, "d MMM yyyy", { locale: ru })} по ${format(dates.allTimeEnd, "d MMM yyyy", { locale: ru })}`;
@@ -385,10 +383,10 @@ const DatePickerPopup = ({ isOpen, onClose, onDateSelect }) => {
   const getDatePickerBounds = () => {
     const dates = getDynamicDates();
     const yearsRange = Array.from(
-      { length: dates.currentYear - dates.earliestYear + 1 }, 
+      { length: dates.currentYear - dates.earliestYear + 1 },
       (_, i) => dates.earliestYear + i
     );
-    
+
     return {
       minDate: dates.allTimeStart,
       maxDate: dates.allTimeEnd,
@@ -407,7 +405,7 @@ const DatePickerPopup = ({ isOpen, onClose, onDateSelect }) => {
         <div className={styles.header}>
           <h2 className={styles.title}>{getStepTitle()}</h2>
           <p className={styles.subtitle}>{getStepSubtitle()}</p>
-          
+
           {/* Информация о доступных данных */}
           {dateBounds.hasRealData && (
             <div className={styles.dataInfo}>
@@ -448,13 +446,13 @@ const DatePickerPopup = ({ isOpen, onClose, onDateSelect }) => {
               >
                 <span className={styles.rangeTitle}>Всё время</span>
                 <span className={styles.rangeDescription}>
-                  {dateBounds.hasRealData 
+                  {dateBounds.hasRealData
                     ? `С ${format(dateBounds.minDate, "d MMM yyyy", { locale: ru })} по ${format(dateBounds.maxDate, "d MMM yyyy", { locale: ru })}`
                     : "Все доступные данные"
                   }
                 </span>
               </button>
-              
+
               <button
                 className={`${styles.rangeOption} ${quickSelectionType === "currentYear" ? styles.rangeOptionSelected : ""}`}
                 onClick={() => handleRangeTypeSelect("currentYear")}
@@ -462,7 +460,7 @@ const DatePickerPopup = ({ isOpen, onClose, onDateSelect }) => {
               >
                 <span className={styles.rangeTitle}>Текущий год</span>
                 <span className={styles.rangeDescription}>
-                  {dateBounds.hasRealData 
+                  {dateBounds.hasRealData
                     ? `С 1 января ${dateBounds.yearsRange[dateBounds.yearsRange.length - 1]} по ${format(dateBounds.maxDate, "d MMM yyyy", { locale: ru })}`
                     : `Текущий год ${new Date().getFullYear()}`
                   }
@@ -489,7 +487,7 @@ const DatePickerPopup = ({ isOpen, onClose, onDateSelect }) => {
                     ▼
                   </span>
                 </button>
-                
+
                 {!isLoadingRegions && (
                   <div className={`${styles.regionDropdown} ${isRegionDropdownOpen ? styles.regionDropdownOpen : ''}`}>
                     {regions.map(region => (
@@ -520,7 +518,7 @@ const DatePickerPopup = ({ isOpen, onClose, onDateSelect }) => {
                   {isFirstTime ? 'Настроить период вручную' : 'Выбрать другой период'}
                 </span>
                 <span className={styles.customDescription}>
-                  {dateBounds.hasRealData 
+                  {dateBounds.hasRealData
                     ? `Выберите даты в диапазоне ${format(dateBounds.minDate, "d MMM yyyy", { locale: ru })} - ${format(dateBounds.maxDate, "d MMM yyyy", { locale: ru })}`
                     : 'Выберите точные даты начала и окончания'
                   }
@@ -592,7 +590,7 @@ const DatePickerPopup = ({ isOpen, onClose, onDateSelect }) => {
                     >
                       <span className={styles.navIcon}>‹</span>
                     </button>
-                    
+
                     <div className={styles.monthYearContainer}>
                       <select
                         value={date.getMonth()}
@@ -609,7 +607,7 @@ const DatePickerPopup = ({ isOpen, onClose, onDateSelect }) => {
                           </option>
                         ))}
                       </select>
-                      
+
                       <select
                         value={date.getFullYear()}
                         onChange={({ target: { value } }) => {
@@ -626,7 +624,7 @@ const DatePickerPopup = ({ isOpen, onClose, onDateSelect }) => {
                         ))}
                       </select>
                     </div>
-                    
+
                     <button
                       type="button"
                       onClick={increaseMonth}
@@ -639,7 +637,7 @@ const DatePickerPopup = ({ isOpen, onClose, onDateSelect }) => {
                 )}
               />
             </div>
-            
+
             <div className={styles.selectedPreview}>
               <span className={styles.previewLabel}>Начальная дата:</span>
               <span className={styles.previewValue}>
@@ -691,7 +689,7 @@ const DatePickerPopup = ({ isOpen, onClose, onDateSelect }) => {
                     >
                       <span className={styles.navIcon}>‹</span>
                     </button>
-                    
+
                     <div className={styles.monthYearContainer}>
                       <select
                         value={date.getMonth()}
@@ -708,7 +706,7 @@ const DatePickerPopup = ({ isOpen, onClose, onDateSelect }) => {
                           </option>
                         ))}
                       </select>
-                      
+
                       <select
                         value={date.getFullYear()}
                         onChange={({ target: { value } }) => {
@@ -725,7 +723,7 @@ const DatePickerPopup = ({ isOpen, onClose, onDateSelect }) => {
                         ))}
                       </select>
                     </div>
-                    
+
                     <button
                       type="button"
                       onClick={increaseMonth}
@@ -738,7 +736,7 @@ const DatePickerPopup = ({ isOpen, onClose, onDateSelect }) => {
                 )}
               />
             </div>
-            
+
             <div className={styles.selectedPreview}>
               <span className={styles.previewLabel}>Начальная дата:</span>
               <span className={styles.previewValue}>
@@ -762,14 +760,14 @@ const DatePickerPopup = ({ isOpen, onClose, onDateSelect }) => {
                   {formatDateRange()}
                 </span>
               </div>
-              
+
               <div className={styles.regionCard}>
                 <span className={styles.regionCardLabel}>Выбранный регион:</span>
                 <span className={styles.regionCardValue}>
                   {getSelectedRegionName()}
                 </span>
               </div>
-              
+
               <div className={styles.dateDetails}>
                 <div className={styles.dateDetail}>
                   <span className={styles.detailLabel}>Начало:</span>
@@ -799,7 +797,7 @@ const DatePickerPopup = ({ isOpen, onClose, onDateSelect }) => {
               Назад
             </button>
           )}
-          
+
           <button
             className={styles.skipButton}
             onClick={handleSkip}
@@ -807,7 +805,7 @@ const DatePickerPopup = ({ isOpen, onClose, onDateSelect }) => {
           >
             Пропустить
           </button>
-          
+
           {currentStep === "range" && quickSelectionType && (
             <button
               className={styles.confirmButton}
@@ -817,7 +815,7 @@ const DatePickerPopup = ({ isOpen, onClose, onDateSelect }) => {
               Далее
             </button>
           )}
-          
+
           {currentStep === "start" && (
             <button
               className={styles.confirmButton}
@@ -828,7 +826,7 @@ const DatePickerPopup = ({ isOpen, onClose, onDateSelect }) => {
               Далее
             </button>
           )}
-          
+
           {currentStep === "end" && (
             <button
               className={styles.confirmButton}
@@ -839,7 +837,7 @@ const DatePickerPopup = ({ isOpen, onClose, onDateSelect }) => {
               Далее
             </button>
           )}
-          
+
           {currentStep === "confirm" && (
             <button
               className={styles.confirmButton}

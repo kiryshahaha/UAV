@@ -1,4 +1,3 @@
-// components/RegionOperatorsPopup/RegionOperatorsPopup.jsx
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
@@ -14,7 +13,6 @@ const OPERATOR_TYPES = [
   { id: "other", name: "Другие", endpoint: "other" }
 ];
 
-// Функции валидации и очистки данных (те же, что и в OperatorsPopup)
 const validateAndCleanOperators = (operators) => {
   if (!operators || !Array.isArray(operators)) return [];
 

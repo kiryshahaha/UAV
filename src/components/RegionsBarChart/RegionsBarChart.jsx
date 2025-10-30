@@ -12,7 +12,6 @@ import {
 import styles from '../ResizableDrawer/ResizableDrawer.module.css';
 
 
-// Регистрируем компоненты Chart.js
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const ITEMS_PER_PAGE = 10;
